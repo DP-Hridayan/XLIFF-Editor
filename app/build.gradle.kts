@@ -40,6 +40,7 @@ android {
     androidResources {
         @Suppress("UnstableApiUsage")
         generateLocaleConfig = true
+        noCompress += listOf("tflite", "lite")
     }
 
     room {

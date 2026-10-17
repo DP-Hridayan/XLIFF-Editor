@@ -1,19 +1,19 @@
 package `in`.hridayan.xliffeditor.data.translation
 
-import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.Tasks
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import `in`.hridayan.xliffeditor.domain.translation.TranslationEngine
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ExecutionException
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 @Singleton
 class MlKitTranslationService @Inject constructor() : TranslationEngine {
@@ -24,44 +24,56 @@ class MlKitTranslationService @Inject constructor() : TranslationEngine {
         text: String,
         sourceLanguage: String,
         targetLanguage: String
-    ): Result<String> {
-        if (text.isBlank()) return Result.success(text)
+    ): Result<String> = withContext(Dispatchers.IO) {
+        if (text.isBlank()) return@withContext Result.success(text)
 
         val sourceCode = resolveLanguageCode(sourceLanguage)
         val targetCode = resolveLanguageCode(targetLanguage)
 
         if (sourceCode == null || targetCode == null) {
-            return Result.failure(
+            return@withContext Result.failure(
                 IllegalArgumentException("Unsupported language pair: $sourceLanguage -> $targetLanguage")
             )
         }
 
-        return runCatching {
+        try {
             val translator = getOrCreateTranslator(sourceCode, targetCode)
             val downloadConditions = DownloadConditions.Builder().build()
-            translator.downloadModelIfNeeded(downloadConditions).awaitVoid()
+            Tasks.await(translator.downloadModelIfNeeded(downloadConditions))
 
             val shielded = shieldPlaceholders(text)
-            val translatedShielded = translator.translate(shielded.shieldedText).awaitString()
-            unshieldPlaceholders(translatedShielded, shielded.placeholders)
+            val translatedShielded = Tasks.await(translator.translate(shielded.shieldedText))
+            val unshielded = unshieldPlaceholders(translatedShielded ?: "", shielded.placeholders)
+            Result.success(unshielded)
+        } catch (e: ExecutionException) {
+            val cause = e.cause ?: e
+            Result.failure(cause)
+        } catch (e: Throwable) {
+            Result.failure(e)
         }
     }
 
     override suspend fun downloadModelIfNeeded(
         sourceLanguage: String,
         targetLanguage: String
-    ): Result<Unit> {
-        val sourceCode = resolveLanguageCode(sourceLanguage) ?: return Result.failure(
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        val sourceCode = resolveLanguageCode(sourceLanguage) ?: return@withContext Result.failure(
             IllegalArgumentException("Unsupported source language: $sourceLanguage")
         )
-        val targetCode = resolveLanguageCode(targetLanguage) ?: return Result.failure(
+        val targetCode = resolveLanguageCode(targetLanguage) ?: return@withContext Result.failure(
             IllegalArgumentException("Unsupported target language: $targetLanguage")
         )
 
-        return runCatching {
+        try {
             val translator = getOrCreateTranslator(sourceCode, targetCode)
             val downloadConditions = DownloadConditions.Builder().build()
-            translator.downloadModelIfNeeded(downloadConditions).awaitVoid()
+            Tasks.await(translator.downloadModelIfNeeded(downloadConditions))
+            Result.success(Unit)
+        } catch (e: ExecutionException) {
+            val cause = e.cause ?: e
+            Result.failure(cause)
+        } catch (e: Throwable) {
+            Result.failure(e)
         }
     }
 
@@ -108,30 +120,6 @@ class MlKitTranslationService @Inject constructor() : TranslationEngine {
             } else {
                 matchResult.value
             }
-        }
-    }
-
-    private suspend fun Task<Void>.awaitVoid(): Unit = suspendCancellableCoroutine { continuation ->
-        addOnSuccessListener {
-            continuation.resume(Unit)
-        }
-        addOnFailureListener { exception ->
-            continuation.resumeWithException(exception)
-        }
-        addOnCanceledListener {
-            continuation.cancel()
-        }
-    }
-
-    private suspend fun Task<String>.awaitString(): String = suspendCancellableCoroutine { continuation ->
-        addOnSuccessListener { result ->
-            continuation.resume(result ?: "")
-        }
-        addOnFailureListener { exception ->
-            continuation.resumeWithException(exception)
-        }
-        addOnCanceledListener {
-            continuation.cancel()
         }
     }
 

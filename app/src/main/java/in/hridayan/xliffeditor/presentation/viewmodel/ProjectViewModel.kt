@@ -2,6 +2,7 @@ package `in`.hridayan.xliffeditor.presentation.viewmodel
 
 import android.content.ContentResolver
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -117,8 +118,12 @@ class ProjectViewModel @Inject constructor(
                     newStatus = TranslationStatus.TRANSLATED
                 )
             }.onFailure { error ->
+                Log.e("ProjectViewModel", "Translation failed for key: $key", error)
+                val msg = error.localizedMessage?.takeIf { it.isNotBlank() }
+                    ?: error.message?.takeIf { it.isNotBlank() }
+                    ?: error.javaClass.simpleName
                 _uiState.update {
-                    it.copy(statusMessage = "Translation failed: ${error.localizedMessage ?: "Unknown error"}")
+                    it.copy(statusMessage = "Translation failed: $msg")
                 }
             }
 
@@ -136,10 +141,23 @@ class ProjectViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isTranslating = true) }
 
-            translationEngine.downloadModelIfNeeded(
+            val downloadResult = translationEngine.downloadModelIfNeeded(
                 sourceLanguage = current.document.sourceLocale,
                 targetLanguage = current.document.targetLocale
             )
+            downloadResult.onFailure { error ->
+                Log.e("ProjectViewModel", "Model download failed", error)
+                val msg = error.localizedMessage?.takeIf { it.isNotBlank() }
+                    ?: error.message?.takeIf { it.isNotBlank() }
+                    ?: error.javaClass.simpleName
+                _uiState.update {
+                    it.copy(
+                        isTranslating = false,
+                        statusMessage = "Model download failed: $msg"
+                    )
+                }
+                return@launch
+            }
 
             var successCount = 0
             for (item in untranslated) {
