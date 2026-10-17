@@ -1,0 +1,284 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="in.hridayan.xliffeditor"
+4    android:versionCode="1"
+5    android:versionName="1.0.0" >
+6
+7    <uses-sdk
+7-->INJECTED
+8        android:minSdkVersion="28"
+8-->INJECTED
+9        android:targetSdkVersion="37" />
+9-->INJECTED
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:4:5-67
+11-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:4:22-64
+12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+12-->[com.google.mlkit:translate:17.0.3] C:\Users\hrida\.gradle\caches\9.8.0\transforms\d20c0d83ceeb2fd2fb17edf31b892243\transformed\translate-17.0.3\AndroidManifest.xml:7:5-79
+12-->[com.google.mlkit:translate:17.0.3] C:\Users\hrida\.gradle\caches\9.8.0\transforms\d20c0d83ceeb2fd2fb17edf31b892243\transformed\translate-17.0.3\AndroidManifest.xml:7:22-76
+13
+14    <permission
+14-->[androidx.core:core:1.19.1] C:\Users\hrida\.gradle\caches\9.8.0\transforms\6803b000d768fe69dee0287d092301fe\transformed\core-1.19.1\AndroidManifest.xml:22:5-24:47
+15        android:name="in.hridayan.xliffeditor.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+15-->[androidx.core:core:1.19.1] C:\Users\hrida\.gradle\caches\9.8.0\transforms\6803b000d768fe69dee0287d092301fe\transformed\core-1.19.1\AndroidManifest.xml:23:9-81
+16        android:protectionLevel="signature" />
+16-->[androidx.core:core:1.19.1] C:\Users\hrida\.gradle\caches\9.8.0\transforms\6803b000d768fe69dee0287d092301fe\transformed\core-1.19.1\AndroidManifest.xml:24:9-44
+17
+18    <uses-permission android:name="in.hridayan.xliffeditor.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+18-->[androidx.core:core:1.19.1] C:\Users\hrida\.gradle\caches\9.8.0\transforms\6803b000d768fe69dee0287d092301fe\transformed\core-1.19.1\AndroidManifest.xml:26:5-97
+18-->[androidx.core:core:1.19.1] C:\Users\hrida\.gradle\caches\9.8.0\transforms\6803b000d768fe69dee0287d092301fe\transformed\core-1.19.1\AndroidManifest.xml:26:22-94
+19
+20    <application
+20-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:6:5-37:19
+21        android:name="in.hridayan.xliffeditor.XliffEditorApplication"
+21-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:7:9-47
+22        android:allowBackup="true"
+22-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:8:9-35
+23        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+23-->[androidx.core:core:1.19.1] C:\Users\hrida\.gradle\caches\9.8.0\transforms\6803b000d768fe69dee0287d092301fe\transformed\core-1.19.1\AndroidManifest.xml:28:18-86
+24        android:dataExtractionRules="@xml/data_extraction_rules"
+24-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:9:9-65
+25        android:debuggable="true"
+26        android:extractNativeLibs="false"
+26-->INJECTED
+27        android:fullBackupContent="@xml/backup_rules"
+27-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:10:9-54
+28        android:icon="@android:drawable/sym_def_app_icon"
+28-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:11:9-58
+29        android:label="@string/app_name"
+29-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:12:9-41
+30        android:localeConfig="@xml/_generated_res_locale_config"
+31        android:roundIcon="@android:drawable/sym_def_app_icon"
+31-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:13:9-63
+32        android:supportsRtl="true"
+32-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:14:9-35
+33        android:theme="@style/Theme.XliffEditor" >
+33-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:15:9-49
+34        <activity
+34-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:17:9-35:20
+35            android:name="in.hridayan.xliffeditor.MainActivity"
+35-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:18:13-41
+36            android:exported="true"
+36-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:19:13-36
+37            android:theme="@style/Theme.XliffEditor"
+37-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:20:13-53
+38            android:windowSoftInputMode="adjustResize" >
+38-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:21:13-55
+39            <intent-filter>
+39-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:22:13-25:29
+40                <action android:name="android.intent.action.MAIN" />
+40-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:23:17-69
+40-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:23:25-66
+41
+42                <category android:name="android.intent.category.LAUNCHER" />
+42-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:24:17-77
+42-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:24:27-74
+43            </intent-filter>
+44            <intent-filter>
+44-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:27:13-34:29
+45                <action android:name="android.intent.action.VIEW" />
+45-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:28:17-69
+45-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:28:25-66
+46
+47                <category android:name="android.intent.category.DEFAULT" />
+47-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:29:17-76
+47-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:29:27-73
+48                <category android:name="android.intent.category.BROWSABLE" />
+48-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:30:17-78
+48-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:30:27-75
+49
+50                <data android:mimeType="text/xml" />
+50-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:31:17-53
+50-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:31:23-50
+51                <data android:mimeType="application/xml" />
+51-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:31:17-53
+51-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:31:23-50
+52                <data android:mimeType="application/x-xliff+xml" />
+52-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:31:17-53
+52-->C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\AndroidManifest.xml:31:23-50
+53            </intent-filter>
+54        </activity>
+55
+56        <service
+56-->[com.google.mlkit:translate:17.0.3] C:\Users\hrida\.gradle\caches\9.8.0\transforms\d20c0d83ceeb2fd2fb17edf31b892243\transformed\translate-17.0.3\AndroidManifest.xml:11:9-17:19
+57            android:name="com.google.mlkit.common.internal.MlKitComponentDiscoveryService"
+57-->[com.google.mlkit:translate:17.0.3] C:\Users\hrida\.gradle\caches\9.8.0\transforms\d20c0d83ceeb2fd2fb17edf31b892243\transformed\translate-17.0.3\AndroidManifest.xml:12:13-91
+58            android:directBootAware="true"
+58-->[com.google.mlkit:common:18.11.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5f29a72156e6f1bf512620cd1ac27816\transformed\common-18.11.0\AndroidManifest.xml:17:13-43
+59            android:exported="false" >
+59-->[com.google.mlkit:translate:17.0.3] C:\Users\hrida\.gradle\caches\9.8.0\transforms\d20c0d83ceeb2fd2fb17edf31b892243\transformed\translate-17.0.3\AndroidManifest.xml:13:13-37
+60            <meta-data
+60-->[com.google.mlkit:translate:17.0.3] C:\Users\hrida\.gradle\caches\9.8.0\transforms\d20c0d83ceeb2fd2fb17edf31b892243\transformed\translate-17.0.3\AndroidManifest.xml:14:13-16:85
+61                android:name="com.google.firebase.components:com.google.mlkit.nl.translate.NaturalLanguageTranslateRegistrar"
+61-->[com.google.mlkit:translate:17.0.3] C:\Users\hrida\.gradle\caches\9.8.0\transforms\d20c0d83ceeb2fd2fb17edf31b892243\transformed\translate-17.0.3\AndroidManifest.xml:15:17-126
+62                android:value="com.google.firebase.components.ComponentRegistrar" />
+62-->[com.google.mlkit:translate:17.0.3] C:\Users\hrida\.gradle\caches\9.8.0\transforms\d20c0d83ceeb2fd2fb17edf31b892243\transformed\translate-17.0.3\AndroidManifest.xml:16:17-82
+63            <meta-data
+63-->[com.google.mlkit:common:18.11.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5f29a72156e6f1bf512620cd1ac27816\transformed\common-18.11.0\AndroidManifest.xml:20:13-22:85
+64                android:name="com.google.firebase.components:com.google.mlkit.common.internal.CommonComponentRegistrar"
+64-->[com.google.mlkit:common:18.11.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5f29a72156e6f1bf512620cd1ac27816\transformed\common-18.11.0\AndroidManifest.xml:21:17-120
+65                android:value="com.google.firebase.components.ComponentRegistrar" />
+65-->[com.google.mlkit:common:18.11.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5f29a72156e6f1bf512620cd1ac27816\transformed\common-18.11.0\AndroidManifest.xml:22:17-82
+66        </service>
+67
+68        <provider
+68-->[com.google.mlkit:common:18.11.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5f29a72156e6f1bf512620cd1ac27816\transformed\common-18.11.0\AndroidManifest.xml:9:9-13:38
+69            android:name="com.google.mlkit.common.internal.MlKitInitProvider"
+69-->[com.google.mlkit:common:18.11.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5f29a72156e6f1bf512620cd1ac27816\transformed\common-18.11.0\AndroidManifest.xml:10:13-78
+70            android:authorities="in.hridayan.xliffeditor.mlkitinitprovider"
+70-->[com.google.mlkit:common:18.11.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5f29a72156e6f1bf512620cd1ac27816\transformed\common-18.11.0\AndroidManifest.xml:11:13-69
+71            android:exported="false"
+71-->[com.google.mlkit:common:18.11.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5f29a72156e6f1bf512620cd1ac27816\transformed\common-18.11.0\AndroidManifest.xml:12:13-37
+72            android:initOrder="99" />
+72-->[com.google.mlkit:common:18.11.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5f29a72156e6f1bf512620cd1ac27816\transformed\common-18.11.0\AndroidManifest.xml:13:13-35
+73
+74        <activity
+74-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\046018969e2c11baefe2245fdf7cbd92\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:9-173
+75            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+75-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\046018969e2c11baefe2245fdf7cbd92\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:19-85
+76            android:exported="false"
+76-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\046018969e2c11baefe2245fdf7cbd92\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:146-170
+77            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+77-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\046018969e2c11baefe2245fdf7cbd92\transformed\play-services-base-18.5.0\AndroidManifest.xml:5:86-145
+78
+79        <meta-data
+79-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\0a97747722684d772fe525eedae52085\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:9-122
+80            android:name="com.google.android.gms.version"
+80-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\0a97747722684d772fe525eedae52085\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:20-65
+81            android:value="@integer/google_play_services_version" />
+81-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\0a97747722684d772fe525eedae52085\transformed\play-services-basement-18.4.0\AndroidManifest.xml:6:66-119
+82
+83        <activity
+83-->[androidx.compose.ui:ui-test-manifest:1.13.0-alpha01] C:\Users\hrida\.gradle\caches\9.8.0\transforms\e7c97ef30b07115ccb886fe683fbb475\transformed\ui-test-manifest-1.13.0-alpha01\AndroidManifest.xml:23:9-26:79
+84            android:name="androidx.activity.ComponentActivity"
+84-->[androidx.compose.ui:ui-test-manifest:1.13.0-alpha01] C:\Users\hrida\.gradle\caches\9.8.0\transforms\e7c97ef30b07115ccb886fe683fbb475\transformed\ui-test-manifest-1.13.0-alpha01\AndroidManifest.xml:24:13-63
+85            android:exported="true"
+85-->[androidx.compose.ui:ui-test-manifest:1.13.0-alpha01] C:\Users\hrida\.gradle\caches\9.8.0\transforms\e7c97ef30b07115ccb886fe683fbb475\transformed\ui-test-manifest-1.13.0-alpha01\AndroidManifest.xml:25:13-36
+86            android:theme="@android:style/Theme.Material.Light.NoActionBar" />
+86-->[androidx.compose.ui:ui-test-manifest:1.13.0-alpha01] C:\Users\hrida\.gradle\caches\9.8.0\transforms\e7c97ef30b07115ccb886fe683fbb475\transformed\ui-test-manifest-1.13.0-alpha01\AndroidManifest.xml:26:13-76
+87        <activity
+87-->[androidx.compose.ui:ui-tooling-android:1.13.0-alpha01] C:\Users\hrida\.gradle\caches\9.8.0\transforms\37044c0b9788afbef0c8251139479cc3\transformed\ui-tooling\AndroidManifest.xml:23:9-25:39
+88            android:name="androidx.compose.ui.tooling.PreviewActivity"
+88-->[androidx.compose.ui:ui-tooling-android:1.13.0-alpha01] C:\Users\hrida\.gradle\caches\9.8.0\transforms\37044c0b9788afbef0c8251139479cc3\transformed\ui-tooling\AndroidManifest.xml:24:13-71
+89            android:exported="true" />
+89-->[androidx.compose.ui:ui-tooling-android:1.13.0-alpha01] C:\Users\hrida\.gradle\caches\9.8.0\transforms\37044c0b9788afbef0c8251139479cc3\transformed\ui-tooling\AndroidManifest.xml:25:13-36
+90
+91        <provider
+91-->[androidx.emoji2:emoji2:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\3d14060c4d71458bc3bc1ed4196dfc15\transformed\emoji2-1.4.0\AndroidManifest.xml:24:9-32:20
+92            android:name="androidx.startup.InitializationProvider"
+92-->[androidx.emoji2:emoji2:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\3d14060c4d71458bc3bc1ed4196dfc15\transformed\emoji2-1.4.0\AndroidManifest.xml:25:13-67
+93            android:authorities="in.hridayan.xliffeditor.androidx-startup"
+93-->[androidx.emoji2:emoji2:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\3d14060c4d71458bc3bc1ed4196dfc15\transformed\emoji2-1.4.0\AndroidManifest.xml:26:13-68
+94            android:exported="false" >
+94-->[androidx.emoji2:emoji2:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\3d14060c4d71458bc3bc1ed4196dfc15\transformed\emoji2-1.4.0\AndroidManifest.xml:27:13-37
+95            <meta-data
+95-->[androidx.emoji2:emoji2:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\3d14060c4d71458bc3bc1ed4196dfc15\transformed\emoji2-1.4.0\AndroidManifest.xml:29:13-31:52
+96                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+96-->[androidx.emoji2:emoji2:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\3d14060c4d71458bc3bc1ed4196dfc15\transformed\emoji2-1.4.0\AndroidManifest.xml:30:17-75
+97                android:value="androidx.startup" />
+97-->[androidx.emoji2:emoji2:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\3d14060c4d71458bc3bc1ed4196dfc15\transformed\emoji2-1.4.0\AndroidManifest.xml:31:17-49
+98            <meta-data
+98-->[androidx.lifecycle:lifecycle-process:2.11.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\194c42aa727e839f451b982d50e69f88\transformed\lifecycle-process-2.11.0\AndroidManifest.xml:29:13-31:52
+99                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+99-->[androidx.lifecycle:lifecycle-process:2.11.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\194c42aa727e839f451b982d50e69f88\transformed\lifecycle-process-2.11.0\AndroidManifest.xml:30:17-78
+100                android:value="androidx.startup" />
+100-->[androidx.lifecycle:lifecycle-process:2.11.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\194c42aa727e839f451b982d50e69f88\transformed\lifecycle-process-2.11.0\AndroidManifest.xml:31:17-49
+101            <meta-data
+101-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:29:13-31:52
+102                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+102-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:30:17-85
+103                android:value="androidx.startup" />
+103-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:31:17-49
+104        </provider>
+105
+106        <uses-library
+106-->[androidx.window:window:1.5.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\75168ad48ce99737648e98bc31d3d6a2\transformed\window-1.5.0\AndroidManifest.xml:23:9-25:40
+107            android:name="androidx.window.extensions"
+107-->[androidx.window:window:1.5.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\75168ad48ce99737648e98bc31d3d6a2\transformed\window-1.5.0\AndroidManifest.xml:24:13-54
+108            android:required="false" />
+108-->[androidx.window:window:1.5.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\75168ad48ce99737648e98bc31d3d6a2\transformed\window-1.5.0\AndroidManifest.xml:25:13-37
+109        <uses-library
+109-->[androidx.window:window:1.5.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\75168ad48ce99737648e98bc31d3d6a2\transformed\window-1.5.0\AndroidManifest.xml:26:9-28:40
+110            android:name="androidx.window.sidecar"
+110-->[androidx.window:window:1.5.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\75168ad48ce99737648e98bc31d3d6a2\transformed\window-1.5.0\AndroidManifest.xml:27:13-51
+111            android:required="false" />
+111-->[androidx.window:window:1.5.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\75168ad48ce99737648e98bc31d3d6a2\transformed\window-1.5.0\AndroidManifest.xml:28:13-37
+112
+113        <service
+113-->[androidx.room:room-runtime-android:2.8.5] C:\Users\hrida\.gradle\caches\9.8.0\transforms\e8bd1fea87c615979bd38dea0c2a53f1\transformed\room-runtime\AndroidManifest.xml:24:9-28:63
+114            android:name="androidx.room.MultiInstanceInvalidationService"
+114-->[androidx.room:room-runtime-android:2.8.5] C:\Users\hrida\.gradle\caches\9.8.0\transforms\e8bd1fea87c615979bd38dea0c2a53f1\transformed\room-runtime\AndroidManifest.xml:25:13-74
+115            android:directBootAware="true"
+115-->[androidx.room:room-runtime-android:2.8.5] C:\Users\hrida\.gradle\caches\9.8.0\transforms\e8bd1fea87c615979bd38dea0c2a53f1\transformed\room-runtime\AndroidManifest.xml:26:13-43
+116            android:exported="false" />
+116-->[androidx.room:room-runtime-android:2.8.5] C:\Users\hrida\.gradle\caches\9.8.0\transforms\e8bd1fea87c615979bd38dea0c2a53f1\transformed\room-runtime\AndroidManifest.xml:27:13-37
+117        <service
+117-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\hrida\.gradle\caches\9.8.0\transforms\1f3c1ccb56b5357b1c7148f4128cc427\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:29:9-35:19
+118            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
+118-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\hrida\.gradle\caches\9.8.0\transforms\1f3c1ccb56b5357b1c7148f4128cc427\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:30:13-103
+119            android:exported="false" >
+119-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\hrida\.gradle\caches\9.8.0\transforms\1f3c1ccb56b5357b1c7148f4128cc427\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:31:13-37
+120            <meta-data
+120-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\hrida\.gradle\caches\9.8.0\transforms\1f3c1ccb56b5357b1c7148f4128cc427\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:32:13-34:39
+121                android:name="backend:com.google.android.datatransport.cct.CctBackendFactory"
+121-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\hrida\.gradle\caches\9.8.0\transforms\1f3c1ccb56b5357b1c7148f4128cc427\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:33:17-94
+122                android:value="cct" />
+122-->[com.google.android.datatransport:transport-backend-cct:2.3.3] C:\Users\hrida\.gradle\caches\9.8.0\transforms\1f3c1ccb56b5357b1c7148f4128cc427\transformed\transport-backend-cct-2.3.3\AndroidManifest.xml:34:17-36
+123        </service>
+124        <service
+124-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\hrida\.gradle\caches\9.8.0\transforms\e5b08bd672e50b2d226b39e1e9b76719\transformed\transport-runtime-2.2.6\AndroidManifest.xml:26:9-30:19
+125            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
+125-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\hrida\.gradle\caches\9.8.0\transforms\e5b08bd672e50b2d226b39e1e9b76719\transformed\transport-runtime-2.2.6\AndroidManifest.xml:27:13-117
+126            android:exported="false"
+126-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\hrida\.gradle\caches\9.8.0\transforms\e5b08bd672e50b2d226b39e1e9b76719\transformed\transport-runtime-2.2.6\AndroidManifest.xml:28:13-37
+127            android:permission="android.permission.BIND_JOB_SERVICE" >
+127-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\hrida\.gradle\caches\9.8.0\transforms\e5b08bd672e50b2d226b39e1e9b76719\transformed\transport-runtime-2.2.6\AndroidManifest.xml:29:13-69
+128        </service>
+129
+130        <receiver
+130-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\hrida\.gradle\caches\9.8.0\transforms\e5b08bd672e50b2d226b39e1e9b76719\transformed\transport-runtime-2.2.6\AndroidManifest.xml:32:9-34:40
+131            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver"
+131-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\hrida\.gradle\caches\9.8.0\transforms\e5b08bd672e50b2d226b39e1e9b76719\transformed\transport-runtime-2.2.6\AndroidManifest.xml:33:13-132
+132            android:exported="false" />
+132-->[com.google.android.datatransport:transport-runtime:2.2.6] C:\Users\hrida\.gradle\caches\9.8.0\transforms\e5b08bd672e50b2d226b39e1e9b76719\transformed\transport-runtime-2.2.6\AndroidManifest.xml:34:13-37
+133        <receiver
+133-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:34:9-52:20
+134            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+134-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:35:13-76
+135            android:directBootAware="false"
+135-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:36:13-44
+136            android:enabled="true"
+136-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:37:13-35
+137            android:exported="true"
+137-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:38:13-36
+138            android:permission="android.permission.DUMP" >
+138-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:39:13-57
+139            <intent-filter>
+139-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:40:13-42:29
+140                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+140-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:17-91
+140-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:25-88
+141            </intent-filter>
+142            <intent-filter>
+142-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:43:13-45:29
+143                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+143-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:17-85
+143-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:25-82
+144            </intent-filter>
+145            <intent-filter>
+145-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:46:13-48:29
+146                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+146-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:17-88
+146-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:25-85
+147            </intent-filter>
+148            <intent-filter>
+148-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:49:13-51:29
+149                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+149-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:17-95
+149-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\hrida\.gradle\caches\9.8.0\transforms\5ea2f78450384fc9facd7ddbbe84cb50\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:25-92
+150            </intent-filter>
+151        </receiver>
+152    </application>
+153
+154</manifest>

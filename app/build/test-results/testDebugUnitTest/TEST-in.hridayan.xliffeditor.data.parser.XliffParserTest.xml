@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="in.hridayan.xliffeditor.data.parser.XliffParserTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-10-17T10:07:30.655Z" hostname="HRIDAYAN" time="0.035">
+  <properties/>
+  <testcase name="serialize_xliff12_generatesCompliantXml" classname="in.hridayan.xliffeditor.data.parser.XliffParserTest" time="0.028"/>
+  <testcase name="parse_xliff12_extractsUnitsProperly" classname="in.hridayan.xliffeditor.data.parser.XliffParserTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

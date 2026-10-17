@@ -1,0 +1,9 @@
+in.hridayan.xliffeditor.app-pngs-0 C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\build\generated\res\pngs\debug
+in.hridayan.xliffeditor.app-updated_navigation_xml-1 C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\build\generated\updated_navigation_xml\debug
+in.hridayan.xliffeditor.app-debug-2 C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\build\intermediates\generated_locale_config_incremental_dir\debug\generateDebugLocaleConfig
+in.hridayan.xliffeditor.app-packageDebugResources-3 C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+in.hridayan.xliffeditor.app-packageDebugResources-4 C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+in.hridayan.xliffeditor.app-debug-5 C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\build\intermediates\merged_res\debug\mergeDebugResources
+in.hridayan.xliffeditor.app-debug-6 C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\debug\res
+in.hridayan.xliffeditor.app-main-7 C:\Users\hrida\AndroidStudioProjects\XliffEditor\app\src\main\res
+gradleHome-0 C:\Users\hrida\.gradle

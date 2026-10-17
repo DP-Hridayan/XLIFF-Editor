@@ -1,0 +1,38 @@
+{
+    "logs": [
+        {
+            "outputFile": "in.hridayan.xliffeditor.app-mergeDebugResources-64:/values-v33/values-v33.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\hrida\\.gradle\\caches\\9.8.0\\transforms\\f226e80cafcf09144b0e1e964ec759c4\\transformed\\core-splashscreen-1.2.0\\res\\values-v33\\values-v33.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "5",
+                        "endColumns": "12",
+                        "endOffsets": "284"
+                    },
+                    "to": {
+                        "startLines": "6",
+                        "startColumns": "4",
+                        "startOffsets": "470",
+                        "endLines": "9",
+                        "endColumns": "12",
+                        "endOffsets": "699"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\hrida\\.gradle\\caches\\9.8.0\\transforms\\90e00fbb4211b89d2d2cbb37cca1827c\\transformed\\material-1.14.0\\res\\values-v33\\values-v33.xml",
+                    "from": {
+                        "startLines": "2,3,4,5",
+                        "startColumns": "4,4,4,4",
+                        "startOffsets": "55,159,263,366",
+                        "endColumns": "103,103,102,103",
+                        "endOffsets": "154,258,361,465"
+                    }
+                }
+            ]
+        }
+    ]
+}

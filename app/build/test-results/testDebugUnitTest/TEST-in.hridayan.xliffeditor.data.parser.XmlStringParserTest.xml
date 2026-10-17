@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="in.hridayan.xliffeditor.data.parser.XmlStringParserTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-10-17T10:07:30.692Z" hostname="HRIDAYAN" time="0.012">
+  <properties/>
+  <testcase name="serialize_escapesApostrophesAndFormatsProperly" classname="in.hridayan.xliffeditor.data.parser.XmlStringParserTest" time="0.005"/>
+  <testcase name="parse_standardStrings_extractsKeysValuesAndComments" classname="in.hridayan.xliffeditor.data.parser.XmlStringParserTest" time="0.001"/>
+  <testcase name="parse_plurals_extractsQuantityMap" classname="in.hridayan.xliffeditor.data.parser.XmlStringParserTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">XLIFF Editor</string>
+    <string name="files" comment="Navigation destination label for file management">Files</string>
+    <string name="strings" comment="Navigation destination label for string catalog">Strings</string>
+    <string name="translate" comment="Navigation destination label for translation workspace">Translate</string>
+    <string name="settings" comment="Navigation destination label for settings">Settings</string>
+    <string name="search_hint" comment="Placeholder text in the main translation search bar">Search strings, keys, contexts…</string>
+    <string name="translated" comment="Status badge indicating translation is complete">Translated</string>
+    <string name="fuzzy_needs_review" comment="Status badge indicating translation needs review">Fuzzy / Needs Review</string>
+    <string name="untranslated" comment="Status badge indicating string is missing translation">Untranslated</string>
+    <string name="edit" comment="Action button label to edit a string translation">Edit</string>
+    <string name="open_file" comment="Action label to open an XML or XLIFF file">Open File</string>
+    <string name="open_project" comment="Action label to open an Android res directory tree">Open Project</string>
+    <string name="save" comment="Action button to save changes">Save</string>
+    <string name="cancel" comment="Action button to discard changes">Cancel</string>
+</resources>

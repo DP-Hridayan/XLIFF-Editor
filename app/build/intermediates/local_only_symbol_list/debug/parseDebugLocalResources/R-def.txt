@@ -1,0 +1,20 @@
+R_DEF: Internal format may change without notice
+local
+string app_name
+string cancel
+string edit
+string files
+string fuzzy_needs_review
+string open_file
+string open_project
+string save
+string search_hint
+string settings
+string strings
+string translate
+string translated
+string untranslated
+style Theme.XliffEditor
+xml _generated_res_locale_config
+xml backup_rules
+xml data_extraction_rules
