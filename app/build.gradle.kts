@@ -51,18 +51,35 @@ android {
         create("release") {
             val keystoreProperties = Properties()
             val keystorePropertiesFile = rootProject.file("keystore.properties")
+            val isCI = System.getenv("CI")?.toBoolean() == true
 
-            if (keystorePropertiesFile.exists()) {
-                keystorePropertiesFile.inputStream().use {
-                    keystoreProperties.load(it)
+            when {
+                keystorePropertiesFile.exists() -> {
+                    keystorePropertiesFile.inputStream().use {
+                        keystoreProperties.load(it)
+                    }
+
+                    val storeFilePath = keystoreProperties["storeFile"] as? String
+                    if (storeFilePath != null) {
+                        storeFile = rootProject.file(storeFilePath)
+                        storePassword = keystoreProperties["storePassword"] as String
+                        keyAlias = keystoreProperties["keyAlias"] as String
+                        keyPassword = keystoreProperties["keyPassword"] as String
+                    }
                 }
 
-                val storeFilePath = keystoreProperties["storeFile"] as? String
-                if (storeFilePath != null) {
-                    storeFile = rootProject.file(storeFilePath)
-                    storePassword = keystoreProperties["storePassword"] as String
-                    keyAlias = keystoreProperties["keyAlias"] as String
-                    keyPassword = keystoreProperties["keyPassword"] as String
+                isCI -> {
+                    val path = System.getenv("KEYSTORE_PATH")
+                    val password = System.getenv("KEYSTORE_PASSWORD")
+                    val alias = System.getenv("KEY_ALIAS")
+                    val keyPass = System.getenv("KEY_PASSWORD") ?: password
+
+                    if (!path.isNullOrBlank() && !password.isNullOrBlank() && !alias.isNullOrBlank()) {
+                        storeFile = file(path)
+                        storePassword = password
+                        keyAlias = alias
+                        keyPassword = keyPass
+                    }
                 }
             }
         }
