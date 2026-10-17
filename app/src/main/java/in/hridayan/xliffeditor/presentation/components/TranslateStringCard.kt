@@ -28,6 +28,8 @@ fun TranslateStringCard(
     sourceLocale: String,
     targetLocale: String,
     onEditClick: () -> Unit,
+    onAutoTranslateClick: (() -> Unit)? = null,
+    isTranslating: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val cardContainerColor = when (item.status) {
@@ -114,7 +116,18 @@ fun TranslateStringCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 StatusPill(status = item.status)
-                EditButton(onClick = onEditClick)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (onAutoTranslateClick != null && item.status != TranslationStatus.TRANSLATED) {
+                        AutoTranslateButton(
+                            onClick = onAutoTranslateClick,
+                            isTranslating = isTranslating
+                        )
+                    }
+                    EditButton(onClick = onEditClick)
+                }
             }
         }
     }

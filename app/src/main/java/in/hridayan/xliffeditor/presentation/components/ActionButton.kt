@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -71,6 +73,64 @@ fun EditButton(
                     fontWeight = FontWeight.Medium
                 ),
                 color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+fun AutoTranslateButton(
+    onClick: () -> Unit,
+    isTranslating: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    val hapticFeedback = LocalHapticFeedback.current
+    val hapticsEnabled = LocalHapticsEnabled.current
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Surface(
+        modifier = modifier
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = !isTranslating,
+                onClick = {
+                    if (hapticsEnabled) {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.ContextClick)
+                    }
+                    onClick()
+                }
+            ),
+        shape = RoundedCornerShape(100),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f))
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (isTranslating) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(14.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.AutoAwesome,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(14.dp)
+                )
+            }
+            Text(
+                text = stringResource(R.string.translate),
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
+                ),
+                color = MaterialTheme.colorScheme.onSecondaryContainer
             )
         }
     }

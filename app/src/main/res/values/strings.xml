@@ -13,4 +13,34 @@
     <string name="open_project" comment="Action label to open an Android res directory tree">Open Project</string>
     <string name="save" comment="Action button to save changes">Save</string>
     <string name="cancel" comment="Action button to discard changes">Cancel</string>
+    <string name="export_file" comment="Action label to export the current document to storage">Export File</string>
+    <string name="new_file" comment="Action label to create a new localization file">New File</string>
+    <string name="add_string" comment="Button label to add a new translatable string entry">Add String</string>
+    <string name="delete_string" comment="Action label to delete a string entry">Delete</string>
+    <string name="edit_string" comment="Action label to edit a string key and properties">Edit String</string>
+    <string name="key_name" comment="Field label for the resource key name">Key Name</string>
+    <string name="source_value" comment="Field label for original source language text">Source Value</string>
+    <string name="target_value" comment="Field label for translated target text">Target Value</string>
+    <string name="developer_comment" comment="Field label for optional comment attribute">Developer Comment (Optional)</string>
+    <string name="translatable" comment="Toggle switch label for translatable attribute">Translatable</string>
+    <string name="translate_with_mlkit" comment="Action button to auto translate string using on-device ML Kit">Translate with ML Kit</string>
+    <string name="auto_translate_all" comment="Action button to batch translate all untranslated items">Auto-Translate Untranslated</string>
+    <string name="translating" comment="Progress indicator text during active machine translation">Translating…</string>
+    <string name="file_saved_successfully" comment="Notification toast indicating successful file save">File saved successfully</string>
+    <string name="file_loaded_successfully" comment="Notification toast indicating file was opened and parsed">File loaded successfully</string>
+    <string name="file_info" comment="Card header for current active file details">File Information</string>
+    <string name="no_file_loaded" comment="Placeholder text when no document is active">No file loaded</string>
+    <string name="strings_count" comment="Label showing total count of string entries">Strings Count</string>
+    <string name="theme" comment="Settings preference label for theme mode">Theme</string>
+    <string name="system_default" comment="Theme option for system default mode">System Default</string>
+    <string name="light" comment="Theme option for light mode">Light</string>
+    <string name="dark" comment="Theme option for dark mode">Dark</string>
+    <string name="amoled" comment="Theme option for pure black AMOLED dark mode">AMOLED Black</string>
+    <string name="dynamic_color" comment="Settings toggle label for Material You dynamic color">Dynamic Color</string>
+    <string name="source_language" comment="Selector label for source language code">Source Language</string>
+    <string name="target_language" comment="Selector label for target language code">Target Language</string>
+    <string name="about" comment="Settings section header for about info">About</string>
+    <string name="version" comment="Version string display">Version 1.0.0</string>
+    <string name="offline_models" comment="Settings item describing on-device translation capabilities">Offline ML Kit Translation</string>
+    <string name="offline_models_desc" comment="Description explaining private on-device ML Kit translation">Powered by Google ML Kit on-device neural translation. Works 100% offline with zero data sent to external servers.</string>
 </resources>

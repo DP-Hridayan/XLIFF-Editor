@@ -8,11 +8,11 @@ import `in`.hridayan.xliffeditor.domain.model.TranslationStatus
 
 class FilterAndSearchUseCase {
 
-    operator fun invoke(
-        items: List<TranslatableItem>,
+    operator fun <T : TranslatableItem> invoke(
+        items: List<T>,
         query: String = "",
         statusFilter: TranslationStatus? = null
-    ): List<TranslatableItem> {
+    ): List<T> {
         val trimmedQuery = query.trim()
 
         return items.filter { item ->
