@@ -8,7 +8,8 @@
 /gen/
 /out/
 .gradle/
-/build/
+build/
+**/build/
 local.properties
 proguard/
 *.log
@@ -17,3 +18,8 @@ captures/
 *.iml
 .idea/
 .androidide/
+
+# Keystore files
+*.jks
+*.keystore
+keystore.properties

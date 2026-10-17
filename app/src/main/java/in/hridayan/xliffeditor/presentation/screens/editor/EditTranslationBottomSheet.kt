@@ -38,6 +38,9 @@ import `in`.hridayan.xliffeditor.domain.model.ValidationSeverity
 import `in`.hridayan.xliffeditor.domain.usecase.ValidateTranslationUseCase
 import `in`.hridayan.xliffeditor.presentation.components.LocaleBadge
 
+import androidx.compose.material3.SheetValue
+import androidx.compose.material3.rememberBottomSheetState
+
 @Composable
 fun EditTranslationBottomSheet(
     item: SingleStringItem,
@@ -47,7 +50,10 @@ fun EditTranslationBottomSheet(
     onSave: (newTarget: String, newStatus: TranslationStatus) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetState = rememberBottomSheetState(
+        initialValue = SheetValue.Hidden,
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
+    )
     val validateUseCase = remember { ValidateTranslationUseCase() }
 
     var targetText by remember(item) { mutableStateOf(item.targetValue ?: "") }

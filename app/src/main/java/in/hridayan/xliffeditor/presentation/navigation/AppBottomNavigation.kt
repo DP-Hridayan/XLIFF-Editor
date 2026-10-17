@@ -1,5 +1,6 @@
 package `in`.hridayan.xliffeditor.presentation.navigation
 
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Settings

@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="in.hridayan.xliffeditor.domain.usecase.SyncLocalesUseCaseTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-10-17T10:07:30.705Z" hostname="HRIDAYAN" time="0.007">
-  <properties/>
-  <testcase name="invoke_pairsSourceAndTarget_identifiesTranslatedAndUntranslated" classname="in.hridayan.xliffeditor.domain.usecase.SyncLocalesUseCaseTest" time="0.007"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

@@ -1,3 +1,4 @@
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -45,11 +46,32 @@ android {
         schemaDirectory("$projectDir/schemas")
     }
 
+    signingConfigs {
+        create("release") {
+            val keystoreProperties = Properties()
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
+
+            if (keystorePropertiesFile.exists()) {
+                keystorePropertiesFile.inputStream().use {
+                    keystoreProperties.load(it)
+                }
+
+                val storeFilePath = keystoreProperties["storeFile"] as? String
+                if (storeFilePath != null) {
+                    storeFile = rootProject.file(storeFilePath)
+                    storePassword = keystoreProperties["storePassword"] as String
+                    keyAlias = keystoreProperties["keyAlias"] as String
+                    keyPassword = keystoreProperties["keyPassword"] as String
+                }
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
