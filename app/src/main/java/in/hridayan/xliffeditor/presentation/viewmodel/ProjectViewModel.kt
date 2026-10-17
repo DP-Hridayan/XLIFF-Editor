@@ -10,10 +10,11 @@ import `in`.hridayan.xliffeditor.domain.model.FileFormat
 import `in`.hridayan.xliffeditor.domain.model.LoadedDocument
 import `in`.hridayan.xliffeditor.domain.model.SingleStringItem
 import `in`.hridayan.xliffeditor.domain.model.TranslationStatus
+import `in`.hridayan.xliffeditor.domain.repository.AppPreferences
 import `in`.hridayan.xliffeditor.domain.repository.DocumentRepository
+import `in`.hridayan.xliffeditor.domain.repository.DocumentSessionRepository
 import `in`.hridayan.xliffeditor.domain.translation.TranslationEngine
 import `in`.hridayan.xliffeditor.domain.usecase.FilterAndSearchUseCase
-import `in`.hridayan.xliffeditor.domain.repository.AppPreferences
 import `in`.hridayan.xliffeditor.presentation.navigation.BottomNavDestination
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +27,8 @@ import javax.inject.Inject
 class ProjectViewModel @Inject constructor(
     private val documentRepository: DocumentRepository,
     private val translationEngine: TranslationEngine,
-    private val appPreferences: AppPreferences
+    private val appPreferences: AppPreferences,
+    private val documentSessionRepository: DocumentSessionRepository
 ) : ViewModel() {
 
     private val filterAndSearchUseCase = FilterAndSearchUseCase()
@@ -40,6 +42,31 @@ class ProjectViewModel @Inject constructor(
         }
     )
     val uiState: StateFlow<ProjectUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            val savedSession = documentSessionRepository.loadSession()
+            if (savedSession != null) {
+                _uiState.update { current ->
+                    val filtered = filterAndSearchUseCase(
+                        savedSession.items,
+                        current.searchQuery,
+                        current.selectedStatusFilter
+                    )
+                    current.copy(
+                        document = savedSession,
+                        filteredItems = filtered
+                    )
+                }
+            }
+        }
+    }
+
+    private fun persistSession(doc: LoadedDocument) {
+        viewModelScope.launch {
+            documentSessionRepository.saveSession(doc)
+        }
+    }
 
     fun onThemeModeChanged(mode: AppThemeMode) {
         appPreferences.setThemeMode(mode)
@@ -90,6 +117,7 @@ class ProjectViewModel @Inject constructor(
                 }
             }
             val updatedDoc = current.document.copy(items = updatedItems)
+            persistSession(updatedDoc)
             val filtered = filterAndSearchUseCase(updatedItems, current.searchQuery, current.selectedStatusFilter)
             current.copy(
                 document = updatedDoc,
@@ -138,8 +166,18 @@ class ProjectViewModel @Inject constructor(
         }
         if (untranslated.isEmpty()) return
 
+        val total = untranslated.size
+
         viewModelScope.launch {
-            _uiState.update { it.copy(isTranslating = true) }
+            _uiState.update {
+                it.copy(
+                    isTranslating = true,
+                    translationProgress = 0f,
+                    translationProgressPercent = 0,
+                    translatedBatchCount = 0,
+                    totalBatchCount = total
+                )
+            }
 
             val downloadResult = translationEngine.downloadModelIfNeeded(
                 sourceLanguage = current.document.sourceLocale,
@@ -153,6 +191,8 @@ class ProjectViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isTranslating = false,
+                        translationProgress = 0f,
+                        translationProgressPercent = 0,
                         statusMessage = "Model download failed: $msg"
                     )
                 }
@@ -160,13 +200,14 @@ class ProjectViewModel @Inject constructor(
             }
 
             var successCount = 0
-            for (item in untranslated) {
+            for ((index, item) in untranslated.withIndex()) {
                 val result = translationEngine.translate(
                     text = item.sourceValue,
                     sourceLanguage = current.document.sourceLocale,
                     targetLanguage = current.document.targetLocale
                 )
-                result.onSuccess { translatedText ->
+                if (result.isSuccess) {
+                    val translatedText = result.getOrThrow()
                     onSaveTranslation(
                         key = item.key,
                         newTarget = translatedText,
@@ -174,11 +215,24 @@ class ProjectViewModel @Inject constructor(
                     )
                     successCount++
                 }
+                val processed = index + 1
+                val progressFraction = (processed.toFloat() / total.toFloat()).coerceIn(0f, 1f)
+                val percent = (progressFraction * 100).toInt()
+                _uiState.update {
+                    it.copy(
+                        translationProgress = progressFraction,
+                        translationProgressPercent = percent,
+                        translatedBatchCount = processed,
+                        totalBatchCount = total
+                    )
+                }
             }
 
             _uiState.update {
                 it.copy(
                     isTranslating = false,
+                    translationProgress = 1f,
+                    translationProgressPercent = 100,
                     statusMessage = "Translated $successCount string(s) successfully"
                 )
             }
@@ -203,6 +257,7 @@ class ProjectViewModel @Inject constructor(
                 )
                 val updatedItems = current.document.items + newItem
                 val updatedDoc = current.document.copy(items = updatedItems)
+                persistSession(updatedDoc)
                 val filtered = filterAndSearchUseCase(updatedItems, current.searchQuery, current.selectedStatusFilter)
                 current.copy(
                     document = updatedDoc,
@@ -217,6 +272,7 @@ class ProjectViewModel @Inject constructor(
         _uiState.update { current ->
             val updatedItems = current.document.items.filterNot { it.key == key }
             val updatedDoc = current.document.copy(items = updatedItems)
+            persistSession(updatedDoc)
             val filtered = filterAndSearchUseCase(updatedItems, current.searchQuery, current.selectedStatusFilter)
             current.copy(
                 document = updatedDoc,
@@ -244,6 +300,7 @@ class ProjectViewModel @Inject constructor(
                 }
             }
             val updatedDoc = current.document.copy(items = updatedItems)
+            persistSession(updatedDoc)
             val filtered = filterAndSearchUseCase(updatedItems, current.searchQuery, current.selectedStatusFilter)
             current.copy(document = updatedDoc, filteredItems = filtered)
         }
@@ -252,6 +309,7 @@ class ProjectViewModel @Inject constructor(
     fun onTargetLocaleChanged(newLocale: String) {
         _uiState.update { current ->
             val updatedDoc = current.document.copy(targetLocale = newLocale)
+            persistSession(updatedDoc)
             current.copy(document = updatedDoc)
         }
     }
@@ -259,6 +317,7 @@ class ProjectViewModel @Inject constructor(
     fun onSourceLocaleChanged(newLocale: String) {
         _uiState.update { current ->
             val updatedDoc = current.document.copy(sourceLocale = newLocale)
+            persistSession(updatedDoc)
             current.copy(document = updatedDoc)
         }
     }
@@ -267,6 +326,7 @@ class ProjectViewModel @Inject constructor(
         viewModelScope.launch {
             val result = documentRepository.loadDocument(uri, contentResolver)
             result.onSuccess { doc ->
+                persistSession(doc)
                 _uiState.update { current ->
                     val filtered = filterAndSearchUseCase(doc.items, current.searchQuery, current.selectedStatusFilter)
                     current.copy(
@@ -308,9 +368,11 @@ class ProjectViewModel @Inject constructor(
         viewModelScope.launch {
             val result = documentRepository.exportDocument(uri, current.document, contentResolver)
             result.onSuccess {
+                val updatedDoc = current.document.copy(uri = uri)
+                persistSession(updatedDoc)
                 _uiState.update {
                     it.copy(
-                        document = it.document.copy(uri = uri),
+                        document = updatedDoc,
                         statusMessage = "Exported successfully"
                     )
                 }
@@ -331,6 +393,7 @@ class ProjectViewModel @Inject constructor(
             targetLocale = targetLocale,
             items = emptyList()
         )
+        persistSession(newDoc)
         _uiState.update {
             it.copy(
                 document = newDoc,

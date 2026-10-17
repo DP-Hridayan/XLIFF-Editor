@@ -42,7 +42,16 @@ class MainActivity : ComponentActivity() {
             val openDocumentLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.OpenDocument()
             ) { uri ->
-                uri?.let { projectViewModel.onOpenFile(it, contentResolver) }
+                uri?.let {
+                    try {
+                        contentResolver.takePersistableUriPermission(
+                            it,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                        )
+                    } catch (_: Exception) {
+                    }
+                    projectViewModel.onOpenFile(it, contentResolver)
+                }
             }
 
             val exportDocumentLauncher = rememberLauncherForActivityResult(
@@ -87,6 +96,13 @@ class MainActivity : ComponentActivity() {
     private fun handleIntent(intent: Intent?) {
         val uri = intent?.data ?: intent?.clipData?.getItemAt(0)?.uri
         if (uri != null) {
+            try {
+                contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+            } catch (_: Exception) {
+            }
             projectViewModel.onOpenFile(uri, contentResolver)
         }
     }

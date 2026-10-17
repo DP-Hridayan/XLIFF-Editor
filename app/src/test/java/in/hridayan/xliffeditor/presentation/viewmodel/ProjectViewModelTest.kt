@@ -7,6 +7,7 @@ import `in`.hridayan.xliffeditor.domain.model.SingleStringItem
 import `in`.hridayan.xliffeditor.domain.model.TranslationStatus
 import `in`.hridayan.xliffeditor.domain.repository.AppPreferences
 import `in`.hridayan.xliffeditor.domain.repository.DocumentRepository
+import `in`.hridayan.xliffeditor.domain.repository.DocumentSessionRepository
 import `in`.hridayan.xliffeditor.domain.translation.TranslationEngine
 import `in`.hridayan.xliffeditor.presentation.navigation.BottomNavDestination
 import kotlinx.coroutines.Dispatchers
@@ -52,12 +53,24 @@ class ProjectViewModelTest {
         override fun setDynamicColor(enabled: Boolean) { this.dynamic = enabled }
     }
 
+    private val fakeSessionRepo = object : DocumentSessionRepository {
+        var savedDoc: LoadedDocument? = null
+        override suspend fun saveSession(document: LoadedDocument) {
+            savedDoc = document
+        }
+        override suspend fun loadSession(): LoadedDocument? = savedDoc
+        override suspend fun clearSession() {
+            savedDoc = null
+        }
+    }
+
     private lateinit var viewModel: ProjectViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = ProjectViewModel(fakeRepo, fakeTranslator, fakePrefs)
+        fakeSessionRepo.savedDoc = null
+        viewModel = ProjectViewModel(fakeRepo, fakeTranslator, fakePrefs, fakeSessionRepo)
     }
 
     @After
@@ -83,10 +96,14 @@ class ProjectViewModelTest {
     @Test
     fun testAddNewStringAndTranslate() = runTest {
         viewModel.onAddNewString("btn_submit", "Submit Now", "Comment", true)
+        testScheduler.advanceUntilIdle()
+
         val added = viewModel.uiState.value.document.items.find { it.key == "btn_submit" }
         assertNotNull(added)
         assertEquals("Submit Now", added?.sourceValue)
         assertEquals(TranslationStatus.UNTRANSLATED, added?.status)
+        assertNotNull(fakeSessionRepo.savedDoc)
+        assertEquals(1, fakeSessionRepo.savedDoc?.items?.size)
 
         viewModel.onAutoTranslateItem("btn_submit")
         testScheduler.advanceUntilIdle()
@@ -94,6 +111,42 @@ class ProjectViewModelTest {
         val translated = viewModel.uiState.value.document.items.find { it.key == "btn_submit" }
         assertEquals("Translated: Submit Now", translated?.targetValue)
         assertEquals(TranslationStatus.TRANSLATED, translated?.status)
+    }
+
+    @Test
+    fun testSessionRestorationOnLaunch() = runTest {
+        // Pre-populate session
+        fakeSessionRepo.savedDoc = LoadedDocument(
+            fileName = "app_strings.xml",
+            items = listOf(
+                SingleStringItem(key = "title", sourceValue = "Hello World", status = TranslationStatus.UNTRANSLATED)
+            )
+        )
+
+        val newViewModel = ProjectViewModel(fakeRepo, fakeTranslator, fakePrefs, fakeSessionRepo)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals("app_strings.xml", newViewModel.uiState.value.document.fileName)
+        assertEquals(1, newViewModel.uiState.value.document.items.size)
+        assertEquals("title", newViewModel.uiState.value.document.items[0].key)
+    }
+
+    @Test
+    fun testAutoTranslateAllProgress() = runTest {
+        viewModel.onAddNewString("str1", "One", null, true)
+        viewModel.onAddNewString("str2", "Two", null, true)
+        testScheduler.advanceUntilIdle()
+
+        viewModel.onAutoTranslateAllUntranslated()
+        testScheduler.advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(false, state.isTranslating)
+        assertEquals(100, state.translationProgressPercent)
+        assertEquals(2, state.translatedBatchCount)
+        assertEquals(2, state.totalBatchCount)
+        assertEquals(TranslationStatus.TRANSLATED, state.document.items[0].status)
+        assertEquals(TranslationStatus.TRANSLATED, state.document.items[1].status)
     }
 
     @Test

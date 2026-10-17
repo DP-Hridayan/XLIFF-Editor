@@ -6,9 +6,11 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import `in`.hridayan.xliffeditor.data.repository.AppPreferencesImpl
 import `in`.hridayan.xliffeditor.data.repository.DocumentRepositoryImpl
+import `in`.hridayan.xliffeditor.data.repository.DocumentSessionRepositoryImpl
 import `in`.hridayan.xliffeditor.data.translation.MlKitTranslationService
 import `in`.hridayan.xliffeditor.domain.repository.AppPreferences
 import `in`.hridayan.xliffeditor.domain.repository.DocumentRepository
+import `in`.hridayan.xliffeditor.domain.repository.DocumentSessionRepository
 import `in`.hridayan.xliffeditor.domain.translation.TranslationEngine
 import javax.inject.Singleton
 
@@ -33,4 +35,10 @@ abstract class AppModule {
     abstract fun bindAppPreferences(
         impl: AppPreferencesImpl
     ): AppPreferences
+
+    @Binds
+    @Singleton
+    abstract fun bindDocumentSessionRepository(
+        impl: DocumentSessionRepositoryImpl
+    ): DocumentSessionRepository
 }
