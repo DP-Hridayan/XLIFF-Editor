@@ -83,7 +83,8 @@ fun AppNavHost(
                             val doc = uiState.exportingProject ?: uiState.activeProject
                             val baseName = doc.fileName.substringBeforeLast(".")
                             onRequestExportZip("${baseName}_translations.zip", selectedLocales)
-                        }
+                        },
+                        onAddCustomSourceLocale = viewModel::onAddCustomSourceLocale
                     )
                 }
                 AppScreen.PROJECT_DETAIL -> {
@@ -102,7 +103,8 @@ fun AppNavHost(
                         onTargetLocaleChanged = viewModel::onTargetLocaleChanged,
                         onAddNewString = viewModel::onAddNewString,
                         onUpdateString = viewModel::onUpdateStringDetails,
-                        onDeleteString = viewModel::onDeleteString
+                        onDeleteString = viewModel::onDeleteString,
+                        onAddCustomTargetLocale = viewModel::onAddCustomTargetLocale
                     )
                 }
                 AppScreen.SETTINGS -> {

@@ -58,7 +58,7 @@ import `in`.hridayan.xliffeditor.core.ui.theme.CardCornerShape
 import `in`.hridayan.xliffeditor.domain.model.LoadedDocument
 import `in`.hridayan.xliffeditor.domain.model.TranslationStatus
 import `in`.hridayan.xliffeditor.presentation.components.ExportBottomSheet
-import `in`.hridayan.xliffeditor.presentation.components.ImportConfirmationDialog
+import `in`.hridayan.xliffeditor.presentation.components.ImportConfirmationBottomSheet
 import `in`.hridayan.xliffeditor.presentation.components.LocaleBadge
 import `in`.hridayan.xliffeditor.presentation.viewmodel.ProjectUiState
 
@@ -82,6 +82,7 @@ fun FilesScreen(
     onCancelImport: () -> Unit,
     onDismissExportDialog: () -> Unit,
     onConfirmExportZip: (selectedLocales: Set<String>) -> Unit,
+    onAddCustomSourceLocale: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var projectPendingDelete by remember { mutableStateOf<LoadedDocument?>(null) }
@@ -158,11 +159,12 @@ fun FilesScreen(
     }
 
     if (uiState.pendingImportDocument != null) {
-        ImportConfirmationDialog(
+        ImportConfirmationBottomSheet(
             pendingDoc = uiState.pendingImportDocument,
             availableLocales = uiState.availableSourceLocales,
             onConfirm = onConfirmImport,
-            onDismiss = onCancelImport
+            onDismiss = onCancelImport,
+            onAddCustomLocale = onAddCustomSourceLocale
         )
     }
 

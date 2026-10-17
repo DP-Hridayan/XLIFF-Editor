@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.CircularProgressIndicator
@@ -66,6 +67,7 @@ import `in`.hridayan.xliffeditor.core.ui.components.haptic.withHaptic
 import `in`.hridayan.xliffeditor.core.ui.theme.AshellYouAnimationSpecs
 import `in`.hridayan.xliffeditor.domain.model.SingleStringItem
 import `in`.hridayan.xliffeditor.domain.model.TranslationStatus
+import `in`.hridayan.xliffeditor.presentation.components.AddLocaleBottomSheet
 import `in`.hridayan.xliffeditor.presentation.components.FilterOptionItem
 import `in`.hridayan.xliffeditor.presentation.components.SearchAndFilterBar
 import `in`.hridayan.xliffeditor.presentation.components.TranslateStringCard
@@ -85,9 +87,11 @@ fun TranslateScreen(
     onAutoTranslateAllUntranslated: () -> Unit,
     onTranslateSingleItemDirect: suspend (text: String) -> String?,
     onTargetLocaleChanged: (String) -> Unit,
+    onAddCustomTargetLocale: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var showFilterSheet by remember { mutableStateOf(false) }
+    var showAddLocaleSheet by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -113,7 +117,8 @@ fun TranslateScreen(
         TargetLocaleChipSelector(
             selectedLocale = uiState.document.targetLocale,
             locales = filteredTargetLocales,
-            onLocaleSelected = onTargetLocaleChanged
+            onLocaleSelected = onTargetLocaleChanged,
+            onAddLocaleClick = { showAddLocaleSheet = true }
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -290,6 +295,7 @@ fun TranslateScreen(
         ModalBottomSheet(
             onDismissRequest = { showFilterSheet = false },
             sheetState = filterSheetState,
+            sheetGesturesEnabled = false,
             shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ) {
@@ -342,18 +348,19 @@ fun TranslateScreen(
                     }
                 )
 
-                FilterOptionItem(
-                    title = stringResource(R.string.untranslated),
-                    selected = uiState.selectedStatusFilter == TranslationStatus.UNTRANSLATED,
-                    onClick = {
-                        onStatusFilterSelected(TranslationStatus.UNTRANSLATED)
-                        showFilterSheet = false
-                    }
-                )
-
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+    }
+
+    if (showAddLocaleSheet) {
+        AddLocaleBottomSheet(
+            onLocaleSelected = { code ->
+                onAddCustomTargetLocale(code)
+                showAddLocaleSheet = false
+            },
+            onDismiss = { showAddLocaleSheet = false }
+        )
     }
 }
 
@@ -365,16 +372,26 @@ private const val CHIP_ROW_PADDING_DP = 12
 private const val CHIP_ROW_SPACING_DP = 6
 private const val CHIP_HORIZONTAL_PADDING_DP = 14
 private const val CHIP_VERTICAL_PADDING_DP = 8
+private const val ADD_CHIP_ICON_SIZE_DP = 16
+private const val ADD_CHIP_HORIZONTAL_PADDING_DP = 12
 
 @Composable
 private fun TargetLocaleChipSelector(
     selectedLocale: String,
     locales: List<String>,
     onLocaleSelected: (String) -> Unit,
+    onAddLocaleClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
     val listState = rememberLazyListState()
+
+    LaunchedEffect(selectedLocale) {
+        val selectedIndex = locales.indexOf(selectedLocale)
+        if (selectedIndex >= 0) {
+            listState.animateScrollToItem(selectedIndex)
+        }
+    }
 
     LaunchedEffect(listState) {
         var previousStart = true
@@ -467,11 +484,39 @@ private fun TargetLocaleChipSelector(
                     locale = locale,
                     isSelected = isSelected,
                     isFirst = index == 0,
-                    isLast = index == locales.lastIndex,
+                    isLast = false,
                     onClick = { onLocaleSelected(locale) }
                 )
             }
+            item(key = "add_locale_chip") {
+                AddLocaleChip(onClick = onAddLocaleClick)
+            }
         }
+    }
+}
+
+@Composable
+private fun AddLocaleChip(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(CHIP_CORNER_PERCENT_ROUNDED))
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+            .clickable(onClick = withHaptic { onClick() })
+            .padding(
+                horizontal = ADD_CHIP_HORIZONTAL_PADDING_DP.dp,
+                vertical = CHIP_VERTICAL_PADDING_DP.dp
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Add,
+            contentDescription = stringResource(R.string.add_language),
+            modifier = Modifier.size(ADD_CHIP_ICON_SIZE_DP.dp),
+            tint = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 

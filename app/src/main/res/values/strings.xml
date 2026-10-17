@@ -63,4 +63,9 @@
     <string name="strings_count_format" comment="Badge label showing number of strings">%1$d strings</string>
     <string name="translatable_count_format" comment="Badge label showing number of translatable strings">%1$d translatable</string>
     <string name="support_development" comment="Settings item title for developer donation or support link">Support Development</string>
+    <string name="add_language" comment="Title for dialog or bottom sheet to add a language">Add Language</string>
+    <string name="add" comment="Action button to add an item">Add</string>
+    <string name="search_languages_hint" comment="Search placeholder for language selector">Search languages or enter code…</string>
+    <string name="custom_code" comment="Label for manual custom language code">Custom Language Code</string>
+    <string name="mlkit_supported" comment="Status badge indicating language is supported by ML Kit">ML Kit Supported</string>
 </resources>

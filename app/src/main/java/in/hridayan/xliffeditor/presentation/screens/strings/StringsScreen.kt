@@ -24,16 +24,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,14 +48,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import `in`.hridayan.xliffeditor.R
 import `in`.hridayan.xliffeditor.core.ui.components.card.CustomCard
+import `in`.hridayan.xliffeditor.core.ui.components.haptic.withHaptic
+import `in`.hridayan.xliffeditor.core.ui.components.text.AutoResizeableText
 import `in`.hridayan.xliffeditor.core.ui.theme.CardCornerShape
 import `in`.hridayan.xliffeditor.domain.model.SingleStringItem
 import `in`.hridayan.xliffeditor.presentation.components.SearchAndFilterBar
 import `in`.hridayan.xliffeditor.presentation.viewmodel.ProjectUiState
+
+private val SheetPadding: Dp = 24.dp
+private val SheetCornerRadius: Dp = 28.dp
+private val HeaderSpacing: Dp = 12.dp
+private val TitleFontSize = 20.sp
+private val SectionSpacing: Dp = 16.dp
+private val FieldSpacing: Dp = 12.dp
+private val TextFieldCornerRadius: Dp = 12.dp
+private val ButtonRowSpacing: Dp = 24.dp
+private val ActionButtonSpacing: Dp = 12.dp
+private const val ButtonCornerPercent = 100
 
 @Composable
 fun StringsScreen(
@@ -186,7 +205,7 @@ fun StringsScreen(
     }
 
     if (showAddDialog) {
-        StringEditorDialog(
+        StringEditorBottomSheet(
             title = stringResource(R.string.add_string),
             initialKey = "",
             initialSource = "",
@@ -201,7 +220,7 @@ fun StringsScreen(
     }
 
     editingItem?.let { item ->
-        StringEditorDialog(
+        StringEditorBottomSheet(
             title = stringResource(R.string.edit_string),
             initialKey = item.key,
             initialSource = item.sourceValue,
@@ -321,8 +340,9 @@ private fun StringCatalogCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StringEditorDialog(
+private fun StringEditorBottomSheet(
     title: String,
     initialKey: String,
     initialSource: String,
@@ -331,65 +351,128 @@ private fun StringEditorDialog(
     onDismiss: () -> Unit,
     onConfirm: (key: String, source: String, comment: String?, translatable: Boolean) -> Unit
 ) {
+    val sheetState = rememberBottomSheetState(
+        initialValue = SheetValue.Hidden,
+        enabledValues = setOf(SheetValue.Hidden, SheetValue.Expanded)
+    )
+
     var key by remember { mutableStateOf(initialKey) }
     var source by remember { mutableStateOf(initialSource) }
     var comment by remember { mutableStateOf(initialComment) }
     var isTranslatable by remember { mutableStateOf(initialTranslatable) }
 
-    AlertDialog(
+    ModalBottomSheet(
         onDismissRequest = onDismiss,
-        title = { Text(text = title) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(
-                    value = key,
-                    onValueChange = { key = it },
-                    label = { Text(text = stringResource(R.string.key_name)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+        sheetState = sheetState,
+        sheetGesturesEnabled = false,
+        shape = RoundedCornerShape(topStart = SheetCornerRadius, topEnd = SheetCornerRadius),
+        containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = SheetPadding)
+                .padding(bottom = SheetPadding)
+                .navigationBarsPadding()
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(HeaderSpacing)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
                 )
-                OutlinedTextField(
-                    value = source,
-                    onValueChange = { source = it },
-                    label = { Text(text = stringResource(R.string.source_value)) },
-                    modifier = Modifier.fillMaxWidth()
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = TitleFontSize
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                OutlinedTextField(
-                    value = comment,
-                    onValueChange = { comment = it },
-                    label = { Text(text = stringResource(R.string.developer_comment)) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+            }
+
+            Spacer(modifier = Modifier.height(SectionSpacing))
+
+            OutlinedTextField(
+                value = key,
+                onValueChange = { key = it },
+                label = { Text(text = stringResource(R.string.key_name)) },
+                singleLine = true,
+                shape = RoundedCornerShape(TextFieldCornerRadius),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(FieldSpacing))
+
+            OutlinedTextField(
+                value = source,
+                onValueChange = { source = it },
+                label = { Text(text = stringResource(R.string.source_value)) },
+                minLines = 2,
+                shape = RoundedCornerShape(TextFieldCornerRadius),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(FieldSpacing))
+
+            OutlinedTextField(
+                value = comment,
+                onValueChange = { comment = it },
+                label = { Text(text = stringResource(R.string.developer_comment)) },
+                singleLine = true,
+                shape = RoundedCornerShape(TextFieldCornerRadius),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(FieldSpacing))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.translatable),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Switch(
+                    checked = isTranslatable,
+                    onCheckedChange = { isTranslatable = it }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(ButtonRowSpacing))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(ActionButtonSpacing)
+            ) {
+                OutlinedButton(
+                    onClick = withHaptic { onDismiss() },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(ButtonCornerPercent)
                 ) {
-                    Text(text = stringResource(R.string.translatable))
-                    Switch(
-                        checked = isTranslatable,
-                        onCheckedChange = { isTranslatable = it }
-                    )
+                    AutoResizeableText(text = stringResource(R.string.cancel))
+                }
+
+                Button(
+                    onClick = withHaptic {
+                        if (key.isNotBlank()) {
+                            onConfirm(key, source, comment.ifBlank { null }, isTranslatable)
+                        }
+                    },
+                    enabled = key.isNotBlank(),
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(ButtonCornerPercent)
+                ) {
+                    AutoResizeableText(text = stringResource(R.string.save))
                 }
             }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (key.isNotBlank()) {
-                        onConfirm(key, source, comment.ifBlank { null }, isTranslatable)
-                    }
-                },
-                enabled = key.isNotBlank()
-            ) {
-                Text(text = stringResource(R.string.save))
-            }
-        },
-        dismissButton = {
-            OutlinedButton(onClick = onDismiss) {
-                Text(text = stringResource(R.string.cancel))
-            }
         }
-    )
+    }
 }

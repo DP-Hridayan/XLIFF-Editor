@@ -10,6 +10,7 @@ import `in`.hridayan.xliffeditor.domain.model.FileFormat
 import `in`.hridayan.xliffeditor.domain.model.LoadedDocument
 import `in`.hridayan.xliffeditor.domain.model.PendingImportDocument
 import `in`.hridayan.xliffeditor.domain.model.SingleStringItem
+import `in`.hridayan.xliffeditor.domain.model.SupportedLocalesProvider
 import `in`.hridayan.xliffeditor.domain.model.TranslationStatus
 import `in`.hridayan.xliffeditor.domain.repository.AppPreferences
 import `in`.hridayan.xliffeditor.domain.repository.DocumentRepository
@@ -375,6 +376,25 @@ class ProjectViewModel @Inject constructor(
     fun onSourceLocaleChanged(newLocale: String) {
         updateActiveProject { doc ->
             doc.copy(sourceLocale = newLocale)
+        }
+    }
+
+    fun onAddCustomTargetLocale(localeCode: String) {
+        val normalized = SupportedLocalesProvider.normalizeCustomLocale(localeCode)
+        if (normalized.isBlank()) return
+        _uiState.update { current ->
+            val updatedLocales = listOf(normalized) + current.availableTargetLocales.filter { it != normalized }
+            current.copy(availableTargetLocales = updatedLocales)
+        }
+        onTargetLocaleChanged(normalized)
+    }
+
+    fun onAddCustomSourceLocale(localeCode: String) {
+        val normalized = SupportedLocalesProvider.normalizeCustomLocale(localeCode)
+        if (normalized.isBlank()) return
+        _uiState.update { current ->
+            val updatedLocales = listOf(normalized) + current.availableSourceLocales.filter { it != normalized }
+            current.copy(availableSourceLocales = updatedLocales)
         }
     }
 

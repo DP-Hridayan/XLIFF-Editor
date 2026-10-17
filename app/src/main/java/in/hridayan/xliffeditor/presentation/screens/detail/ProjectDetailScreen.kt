@@ -65,6 +65,7 @@ fun ProjectDetailScreen(
     onAddNewString: (key: String, sourceValue: String, comment: String?, isTranslatable: Boolean) -> Unit,
     onUpdateString: (oldKey: String, newKey: String, newSource: String, newComment: String?, isTranslatable: Boolean) -> Unit,
     onDeleteString: (key: String) -> Unit,
+    onAddCustomTargetLocale: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -176,6 +177,7 @@ fun ProjectDetailScreen(
                                 onAutoTranslateAllUntranslated = onAutoTranslateAllUntranslated,
                                 onTranslateSingleItemDirect = onTranslateSingleItemDirect,
                                 onTargetLocaleChanged = onTargetLocaleChanged,
+                                onAddCustomTargetLocale = onAddCustomTargetLocale,
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
