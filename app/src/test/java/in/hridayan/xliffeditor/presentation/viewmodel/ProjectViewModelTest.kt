@@ -3,7 +3,9 @@ package `in`.hridayan.xliffeditor.presentation.viewmodel
 import android.content.ContentResolver
 import android.net.Uri
 import `in`.hridayan.xliffeditor.domain.model.LoadedDocument
+import `in`.hridayan.xliffeditor.domain.model.SingleStringItem
 import `in`.hridayan.xliffeditor.domain.model.TranslationStatus
+import `in`.hridayan.xliffeditor.domain.repository.AppPreferences
 import `in`.hridayan.xliffeditor.domain.repository.DocumentRepository
 import `in`.hridayan.xliffeditor.domain.translation.TranslationEngine
 import `in`.hridayan.xliffeditor.presentation.navigation.BottomNavDestination
@@ -41,12 +43,21 @@ class ProjectViewModelTest {
             Result.success(Unit)
     }
 
+    private val fakePrefs = object : AppPreferences {
+        private var mode = AppThemeMode.SYSTEM
+        private var dynamic = true
+        override fun getThemeMode(): AppThemeMode = mode
+        override fun setThemeMode(mode: AppThemeMode) { this.mode = mode }
+        override fun isDynamicColor(): Boolean = dynamic
+        override fun setDynamicColor(enabled: Boolean) { this.dynamic = enabled }
+    }
+
     private lateinit var viewModel: ProjectViewModel
 
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        viewModel = ProjectViewModel(fakeRepo, fakeTranslator)
+        viewModel = ProjectViewModel(fakeRepo, fakeTranslator, fakePrefs)
     }
 
     @After
@@ -61,6 +72,12 @@ class ProjectViewModelTest {
         assertEquals(BottomNavDestination.FILES, viewModel.uiState.value.currentDestination)
         viewModel.onTabSelected(BottomNavDestination.STRINGS)
         assertEquals(BottomNavDestination.STRINGS, viewModel.uiState.value.currentDestination)
+    }
+
+    @Test
+    fun testInitialStringsEmpty() {
+        assertTrue(viewModel.uiState.value.document.items.isEmpty())
+        assertTrue(viewModel.uiState.value.filteredItems.isEmpty())
     }
 
     @Test
@@ -80,9 +97,11 @@ class ProjectViewModelTest {
     }
 
     @Test
-    fun testFilterByStatus() {
-        viewModel.onStatusFilterSelected(TranslationStatus.TRANSLATED)
-        val state = viewModel.uiState.value
-        assertTrue(state.filteredItems.all { it.status == TranslationStatus.TRANSLATED })
+    fun testThemeSwitching() {
+        viewModel.onThemeModeChanged(AppThemeMode.DARK)
+        assertEquals(AppThemeMode.DARK, viewModel.uiState.value.themeMode)
+
+        viewModel.onDynamicColorChanged(false)
+        assertEquals(false, viewModel.uiState.value.dynamicColor)
     }
 }

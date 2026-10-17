@@ -100,7 +100,11 @@ fun AppNavHost(
                     )
                 }
                 BottomNavDestination.SETTINGS -> {
-                    SettingsScreen()
+                    SettingsScreen(
+                        uiState = uiState,
+                        onThemeModeChanged = viewModel::onThemeModeChanged,
+                        onDynamicColorChanged = viewModel::onDynamicColorChanged
+                    )
                 }
             }
         }

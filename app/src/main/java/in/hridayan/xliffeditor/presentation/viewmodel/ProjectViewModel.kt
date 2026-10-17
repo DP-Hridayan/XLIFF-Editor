@@ -12,6 +12,7 @@ import `in`.hridayan.xliffeditor.domain.model.TranslationStatus
 import `in`.hridayan.xliffeditor.domain.repository.DocumentRepository
 import `in`.hridayan.xliffeditor.domain.translation.TranslationEngine
 import `in`.hridayan.xliffeditor.domain.usecase.FilterAndSearchUseCase
+import `in`.hridayan.xliffeditor.domain.repository.AppPreferences
 import `in`.hridayan.xliffeditor.presentation.navigation.BottomNavDestination
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,17 +24,31 @@ import javax.inject.Inject
 @HiltViewModel
 class ProjectViewModel @Inject constructor(
     private val documentRepository: DocumentRepository,
-    private val translationEngine: TranslationEngine
+    private val translationEngine: TranslationEngine,
+    private val appPreferences: AppPreferences
 ) : ViewModel() {
 
     private val filterAndSearchUseCase = FilterAndSearchUseCase()
 
     private val _uiState = MutableStateFlow(
-        ProjectUiState().let { initial ->
+        ProjectUiState(
+            themeMode = appPreferences.getThemeMode(),
+            dynamicColor = appPreferences.isDynamicColor()
+        ).let { initial ->
             initial.copy(filteredItems = initial.document.items)
         }
     )
     val uiState: StateFlow<ProjectUiState> = _uiState.asStateFlow()
+
+    fun onThemeModeChanged(mode: AppThemeMode) {
+        appPreferences.setThemeMode(mode)
+        _uiState.update { it.copy(themeMode = mode) }
+    }
+
+    fun onDynamicColorChanged(enabled: Boolean) {
+        appPreferences.setDynamicColor(enabled)
+        _uiState.update { it.copy(dynamicColor = enabled) }
+    }
 
     fun onTabSelected(destination: BottomNavDestination) {
         _uiState.update { it.copy(currentDestination = destination) }

@@ -39,10 +39,10 @@ class MlKitTranslationService @Inject constructor() : TranslationEngine {
         return runCatching {
             val translator = getOrCreateTranslator(sourceCode, targetCode)
             val downloadConditions = DownloadConditions.Builder().build()
-            translator.downloadModelIfNeeded(downloadConditions).await()
+            translator.downloadModelIfNeeded(downloadConditions).awaitVoid()
 
             val shielded = shieldPlaceholders(text)
-            val translatedShielded = translator.translate(shielded.shieldedText).await()
+            val translatedShielded = translator.translate(shielded.shieldedText).awaitString()
             unshieldPlaceholders(translatedShielded, shielded.placeholders)
         }
     }
@@ -61,8 +61,7 @@ class MlKitTranslationService @Inject constructor() : TranslationEngine {
         return runCatching {
             val translator = getOrCreateTranslator(sourceCode, targetCode)
             val downloadConditions = DownloadConditions.Builder().build()
-            translator.downloadModelIfNeeded(downloadConditions).await()
-            return@runCatching Unit
+            translator.downloadModelIfNeeded(downloadConditions).awaitVoid()
         }
     }
 
@@ -79,14 +78,15 @@ class MlKitTranslationService @Inject constructor() : TranslationEngine {
 
     private fun resolveLanguageCode(language: String): String? {
         val normalized = language.trim().lowercase(Locale.ROOT)
-        val primaryTag = if (normalized.contains("-")) {
-            normalized.substringBefore("-")
-        } else if (normalized.contains("_")) {
-            normalized.substringBefore("_")
-        } else {
-            normalized
+        val primaryTag = when {
+            normalized.contains("-") -> normalized.substringBefore("-")
+            normalized.contains("_") -> normalized.substringBefore("_")
+            else -> normalized
         }
-        return TranslateLanguage.fromLanguageTag(primaryTag)
+        val fromTag = TranslateLanguage.fromLanguageTag(primaryTag)
+        if (fromTag != null) return fromTag
+
+        return TranslateLanguage.getAllLanguages().find { it.equals(primaryTag, ignoreCase = true) }
     }
 
     private fun shieldPlaceholders(input: String): ShieldedResult {
@@ -111,9 +111,21 @@ class MlKitTranslationService @Inject constructor() : TranslationEngine {
         }
     }
 
-    private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { continuation ->
+    private suspend fun Task<Void>.awaitVoid(): Unit = suspendCancellableCoroutine { continuation ->
+        addOnSuccessListener {
+            continuation.resume(Unit)
+        }
+        addOnFailureListener { exception ->
+            continuation.resumeWithException(exception)
+        }
+        addOnCanceledListener {
+            continuation.cancel()
+        }
+    }
+
+    private suspend fun Task<String>.awaitString(): String = suspendCancellableCoroutine { continuation ->
         addOnSuccessListener { result ->
-            continuation.resume(result)
+            continuation.resume(result ?: "")
         }
         addOnFailureListener { exception ->
             continuation.resumeWithException(exception)

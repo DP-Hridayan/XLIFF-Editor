@@ -16,13 +16,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,14 +41,17 @@ import androidx.compose.ui.unit.sp
 import `in`.hridayan.xliffeditor.R
 import `in`.hridayan.xliffeditor.core.ui.components.card.CustomCard
 import `in`.hridayan.xliffeditor.core.ui.theme.CardCornerShape
+import `in`.hridayan.xliffeditor.presentation.viewmodel.AppThemeMode
+import `in`.hridayan.xliffeditor.presentation.viewmodel.ProjectUiState
 
 @Composable
 fun SettingsScreen(
+    uiState: ProjectUiState,
+    onThemeModeChanged: (AppThemeMode) -> Unit,
+    onDynamicColorChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var selectedTheme by remember { mutableStateOf("System Default") }
     var showThemeDialog by remember { mutableStateOf(false) }
-    val themeOptions = listOf("System Default", "Light", "Dark", "AMOLED Black")
 
     Column(
         modifier = modifier
@@ -108,11 +114,50 @@ fun SettingsScreen(
                             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium)
                         )
                         Text(
-                            text = selectedTheme,
+                            text = uiState.themeMode.title,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                }
+
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 12.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Palette,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Column {
+                            Text(
+                                text = stringResource(R.string.dynamic_color),
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Medium)
+                            )
+                            Text(
+                                text = "Material You dynamic theme",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Switch(
+                        checked = uiState.dynamicColor,
+                        onCheckedChange = onDynamicColorChanged
+                    )
                 }
             }
         }
@@ -243,26 +288,26 @@ fun SettingsScreen(
             title = { Text(text = stringResource(R.string.theme)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    for (option in themeOptions) {
+                    for (mode in AppThemeMode.entries) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    selectedTheme = option
+                                    onThemeModeChanged(mode)
                                     showThemeDialog = false
                                 }
                                 .padding(vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
-                                selected = selectedTheme == option,
+                                selected = uiState.themeMode == mode,
                                 onClick = {
-                                    selectedTheme = option
+                                    onThemeModeChanged(mode)
                                     showThemeDialog = false
                                 }
                             )
                             Text(
-                                text = option,
+                                text = mode.title,
                                 modifier = Modifier.padding(start = 8.dp),
                                 style = MaterialTheme.typography.bodyLarge
                             )

@@ -6,32 +6,22 @@ import `in`.hridayan.xliffeditor.domain.model.SingleStringItem
 import `in`.hridayan.xliffeditor.domain.model.TranslationStatus
 import `in`.hridayan.xliffeditor.presentation.navigation.BottomNavDestination
 
+enum class AppThemeMode(val title: String) {
+    SYSTEM("System Default"),
+    LIGHT("Light"),
+    DARK("Dark"),
+    AMOLED("AMOLED Black")
+}
+
 data class ProjectUiState(
+    val themeMode: AppThemeMode = AppThemeMode.SYSTEM,
+    val dynamicColor: Boolean = true,
     val document: LoadedDocument = LoadedDocument(
-        fileName = "strings.xliff",
-        format = FileFormat.XLIFF,
+        fileName = "strings.xml",
+        format = FileFormat.XML,
         sourceLocale = "EN-US",
         targetLocale = "VI-VN",
-        items = listOf(
-            SingleStringItem(
-                key = "app_title",
-                sourceValue = "My Application",
-                targetValue = "Ứng dụng của tôi",
-                status = TranslationStatus.TRANSLATED
-            ),
-            SingleStringItem(
-                key = "welcome_msg",
-                sourceValue = "Welcome to our app, users!",
-                targetValue = "Chào mừng đến với ứng dụng của chúng tôi!",
-                status = TranslationStatus.FUZZY
-            ),
-            SingleStringItem(
-                key = "login_button",
-                sourceValue = "Log In",
-                targetValue = null,
-                status = TranslationStatus.UNTRANSLATED
-            )
-        )
+        items = emptyList()
     ),
     val searchQuery: String = "",
     val selectedStatusFilter: TranslationStatus? = null,

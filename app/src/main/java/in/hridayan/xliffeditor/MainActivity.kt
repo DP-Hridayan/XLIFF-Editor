@@ -8,10 +8,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import `in`.hridayan.xliffeditor.core.ui.theme.XliffEditorTheme
 import `in`.hridayan.xliffeditor.presentation.navigation.AppNavHost
+import `in`.hridayan.xliffeditor.presentation.viewmodel.AppThemeMode
 import `in`.hridayan.xliffeditor.presentation.viewmodel.ProjectViewModel
 
 @AndroidEntryPoint
@@ -26,6 +29,16 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
 
         setContent {
+            val uiState by projectViewModel.uiState.collectAsStateWithLifecycle()
+
+            val isSystemDark = isSystemInDarkTheme()
+            val isDark = when (uiState.themeMode) {
+                AppThemeMode.SYSTEM -> isSystemDark
+                AppThemeMode.LIGHT -> false
+                AppThemeMode.DARK, AppThemeMode.AMOLED -> true
+            }
+            val isAmoled = uiState.themeMode == AppThemeMode.AMOLED
+
             val openDocumentLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.OpenDocument()
             ) { uri ->
@@ -38,7 +51,11 @@ class MainActivity : ComponentActivity() {
                 uri?.let { projectViewModel.onExportFile(it, contentResolver) }
             }
 
-            XliffEditorTheme {
+            XliffEditorTheme(
+                darkTheme = isDark,
+                dynamicColor = uiState.dynamicColor,
+                amoled = isAmoled
+            ) {
                 AppNavHost(
                     viewModel = projectViewModel,
                     contentResolver = contentResolver,
@@ -53,7 +70,7 @@ class MainActivity : ComponentActivity() {
                         )
                     },
                     onExportFilePicker = {
-                        val fileName = projectViewModel.uiState.value.document.fileName
+                        val fileName = uiState.document.fileName
                         exportDocumentLauncher.launch(fileName)
                     },
                     onTranslateDirect = projectViewModel::translateDirect

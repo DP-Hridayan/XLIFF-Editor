@@ -5,6 +5,7 @@ package `in`.hridayan.xliffeditor.presentation.screens.translate
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -20,6 +21,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -38,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import `in`.hridayan.xliffeditor.R
@@ -143,23 +148,75 @@ fun TranslateScreen(
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 80.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(
-                items = uiState.filteredItems,
-                key = { it.key }
-            ) { item ->
-                TranslateStringCard(
-                    item = item,
-                    sourceLocale = uiState.document.sourceLocale,
-                    targetLocale = uiState.document.targetLocale,
-                    onEditClick = { onEditItemClicked(item) },
-                    onAutoTranslateClick = { onAutoTranslateItem(item.key) },
-                    isTranslating = uiState.translatingItemKey == item.key
-                )
+        if (uiState.filteredItems.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 80.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(horizontal = 32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Translate,
+                        contentDescription = null,
+                        modifier = Modifier.size(56.dp),
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                    )
+                    Text(
+                        text = if (uiState.document.items.isEmpty()) "No strings loaded" else "No matching strings",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = if (uiState.document.items.isEmpty()) {
+                            "Open an Android strings.xml or XLIFF file to begin translating."
+                        } else {
+                            "Try clearing your search query or changing status filter."
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    if (uiState.document.items.isEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Button(
+                            onClick = onOpenFileClick,
+                            shape = RoundedCornerShape(100)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.FolderOpen,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = stringResource(R.string.open_file))
+                        }
+                    }
+                }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 80.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(
+                    items = uiState.filteredItems,
+                    key = { it.key }
+                ) { item ->
+                    TranslateStringCard(
+                        item = item,
+                        sourceLocale = uiState.document.sourceLocale,
+                        targetLocale = uiState.document.targetLocale,
+                        onEditClick = { onEditItemClicked(item) },
+                        onAutoTranslateClick = { onAutoTranslateItem(item.key) },
+                        isTranslating = uiState.translatingItemKey == item.key
+                    )
+                }
             }
         }
     }
