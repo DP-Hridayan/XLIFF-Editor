@@ -32,6 +32,9 @@ class XliffSerializer(
                 if (unit.approved) {
                     sb.append(" approved=\"yes\"")
                 }
+                if (!unit.translate) {
+                    sb.append(" translate=\"no\"")
+                }
                 sb.append(">\n")
 
                 sb.append(indent).append(indent).append(indent).append(indent)

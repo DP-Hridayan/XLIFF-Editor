@@ -42,7 +42,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -60,6 +59,7 @@ fun StringsScreen(
     onAddNewString: (key: String, sourceValue: String, comment: String?, isTranslatable: Boolean) -> Unit,
     onUpdateString: (oldKey: String, newKey: String, newSource: String, newComment: String?, isTranslatable: Boolean) -> Unit,
     onDeleteString: (key: String) -> Unit,
+    showTitleHeader: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
@@ -74,32 +74,34 @@ fun StringsScreen(
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
+            if (showTitleHeader) {
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.strings),
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 28.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Surface(
-                    shape = RoundedCornerShape(100),
-                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    modifier = Modifier.padding(horizontal = 4.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${uiState.totalCount} keys",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        text = stringResource(R.string.strings),
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 28.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface
                     )
+                    Surface(
+                        shape = RoundedCornerShape(100),
+                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    ) {
+                        Text(
+                            text = "${uiState.totalCount} keys",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                    }
                 }
             }
 
@@ -107,8 +109,7 @@ fun StringsScreen(
 
             SearchAndFilterBar(
                 query = uiState.searchQuery,
-                onQueryChange = onSearchQueryChanged,
-                onFilterClick = {}
+                onQueryChange = onSearchQueryChanged
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -294,14 +295,7 @@ private fun StringCatalogCard(
                 }
             }
 
-            if (!item.comment.isNullOrBlank()) {
-                Text(
-                    text = "/* ${item.comment} */",
-                    style = MaterialTheme.typography.bodySmall.copy(fontStyle = FontStyle.Italic),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(bottom = 6.dp)
-                )
-            }
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = item.sourceValue,

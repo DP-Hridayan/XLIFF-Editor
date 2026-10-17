@@ -78,13 +78,43 @@ class XmlStringParserTest {
             SingleStringItem(
                 key = "greeting",
                 sourceValue = "Don't worry, user!",
-                comment = "Greeting message"
+                comment = "Greeting message",
+                isTranslatable = false
             )
         )
 
         val xml = serializer.serialize(items)
 
-        assertTrue(xml.contains("<string name=\"greeting\">Don\\'t worry, user!</string>"))
-        assertTrue(xml.contains("<!-- Greeting message -->"))
+        assertTrue(xml.contains("<string name=\"greeting\" comment=\"Greeting message\" translatable=\"false\">Don\\'t worry, user!</string>"))
+    }
+
+    @Test
+    fun parse_aShellYouStringsFile() {
+        val file = java.io.File("C:\\Users\\hrida\\StudioProjects\\aShellYou\\core\\resources\\src\\main\\res\\values\\strings.xml")
+        if (file.exists()) {
+            val content = file.readText()
+            val items = parser.parse(content)
+            assertTrue(items.isNotEmpty())
+        }
+    }
+
+    @Test
+    fun parse_rawAmpersandsAndEntities_parsesSuccessfully() {
+        val xml = """
+            <resources>
+                <string name="terms">Terms & Conditions</string>
+                <string name="url">https://example.com?a=1&b=2</string>
+                <string name="escaped">Save \& Exit</string>
+                <string name="space">Hello&nbsp;World</string>
+            </resources>
+        """.trimIndent()
+        val items = parser.parse(xml)
+        assertEquals(4, items.size)
+        val terms = items[0] as SingleStringItem
+        assertEquals("Terms & Conditions", terms.sourceValue)
+        val url = items[1] as SingleStringItem
+        assertEquals("https://example.com?a=1&b=2", url.sourceValue)
+        val escaped = items[2] as SingleStringItem
+        assertEquals("Save & Exit", escaped.sourceValue)
     }
 }

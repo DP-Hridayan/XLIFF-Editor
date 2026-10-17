@@ -21,7 +21,7 @@
     <string name="key_name" comment="Field label for the resource key name">Key Name</string>
     <string name="source_value" comment="Field label for original source language text">Source Value</string>
     <string name="target_value" comment="Field label for translated target text">Target Value</string>
-    <string name="developer_comment" comment="Field label for optional comment attribute">Developer Comment (Optional)</string>
+    <string name="developer_comment" comment="Field label for comment attribute">Comment (Optional)</string>
     <string name="translatable" comment="Toggle switch label for translatable attribute">Translatable</string>
     <string name="translate_with_mlkit" comment="Action button to auto translate string using on-device ML Kit">Translate with ML Kit</string>
     <string name="auto_translate_all" comment="Action button to batch translate all untranslated items">Auto-Translate Untranslated</string>
@@ -43,4 +43,24 @@
     <string name="version" comment="Version string display">Version 1.0.0</string>
     <string name="offline_models" comment="Settings item describing on-device translation capabilities">Offline ML Kit Translation</string>
     <string name="offline_models_desc" comment="Description explaining private on-device ML Kit translation">Powered by Google ML Kit on-device neural translation. Works 100% offline with zero data sent to external servers.</string>
+    <string name="import_file" comment="Action button label to import a strings file">Import File</string>
+    <string name="confirm_import" comment="Dialog confirmation button label to import strings file">Confirm &amp; Import</string>
+    <string name="export_zip" comment="Action button label to export translations as a ZIP archive">Export ZIP</string>
+    <string name="select_all" comment="Action button to select all items">Select All</string>
+    <string name="deselect_all" comment="Action button to deselect all items">Deselect All</string>
+    <string name="projects" comment="Title for the list of imported projects">Projects</string>
+    <string name="no_projects" comment="Heading when no projects or files are imported">No Projects Yet</string>
+    <string name="no_projects_desc" comment="Description explaining how to import files on home screen">Import an Android strings.xml or XLIFF file to begin translating.</string>
+    <string name="detected_source" comment="Label showing the automatically detected source locale">Auto-detected Source</string>
+    <string name="target_languages" comment="Section header for target languages in export dialog">Target Languages</string>
+    <string name="choose_languages_to_export" comment="Subtitle explaining language selection in export dialog">Select target languages to include in the exported ZIP archive</string>
+    <string name="haptics_and_vibration" comment="Settings preference label for haptics">Haptics &amp; Vibration</string>
+    <string name="haptics_desc" comment="Description for haptic tactile feedback toggle">Provide tactile vibrational feedback on touches and selections</string>
+    <string name="app_description" comment="Brief application description in about section">An elegant, modern XML and XLIFF localization utility built with Jetpack Compose.</string>
+    <string name="delete_project" comment="Dialog title when deleting a project">Delete Project</string>
+    <string name="confirm_delete_project" comment="Message asking user to confirm removing a project">Are you sure you want to remove this project?</string>
+    <string name="confirm" comment="Action button to confirm an action">Confirm</string>
+    <string name="strings_count_format" comment="Badge label showing number of strings">%1$d strings</string>
+    <string name="translatable_count_format" comment="Badge label showing number of translatable strings">%1$d translatable</string>
+    <string name="support_development" comment="Settings item title for developer donation or support link">Support Development</string>
 </resources>

@@ -1,13 +1,11 @@
 package `in`.hridayan.xliffeditor.presentation.navigation
 
 import android.content.ContentResolver
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -18,10 +16,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import `in`.hridayan.xliffeditor.core.ui.navigation.predictiveEnter
+import `in`.hridayan.xliffeditor.core.ui.navigation.predictiveExit
+import `in`.hridayan.xliffeditor.core.ui.navigation.slideFadeInFromRight
+import `in`.hridayan.xliffeditor.core.ui.navigation.slideFadeOutToLeft
+import `in`.hridayan.xliffeditor.presentation.screens.detail.ProjectDetailScreen
 import `in`.hridayan.xliffeditor.presentation.screens.files.FilesScreen
 import `in`.hridayan.xliffeditor.presentation.screens.settings.SettingsScreen
-import `in`.hridayan.xliffeditor.presentation.screens.strings.StringsScreen
-import `in`.hridayan.xliffeditor.presentation.screens.translate.TranslateScreen
+import `in`.hridayan.xliffeditor.presentation.viewmodel.AppScreen
 import `in`.hridayan.xliffeditor.presentation.viewmodel.ProjectViewModel
 
 @Composable
@@ -29,7 +31,7 @@ fun AppNavHost(
     viewModel: ProjectViewModel,
     contentResolver: ContentResolver,
     onOpenFilePicker: () -> Unit,
-    onExportFilePicker: () -> Unit,
+    onRequestExportZip: (suggestedFileName: String, selectedLocales: Set<String>) -> Unit,
     onTranslateDirect: suspend (text: String) -> String?,
     modifier: Modifier = Modifier
 ) {
@@ -43,52 +45,52 @@ fun AppNavHost(
         }
     }
 
+    BackHandler(enabled = uiState.currentScreen != AppScreen.HOME) {
+        viewModel.onNavigateBack()
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
-        bottomBar = {
-            AppBottomNavigation(
-                currentDestination = uiState.currentDestination,
-                onDestinationSelected = viewModel::onTabSelected
-            )
-        },
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { innerPadding ->
+    ) { _ ->
         AnimatedContent(
-            targetState = uiState.currentDestination,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
-            label = "tab_transition",
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) { destination ->
-            when (destination) {
-                BottomNavDestination.FILES -> {
+            targetState = uiState.currentScreen,
+            transitionSpec = {
+                if (targetState == AppScreen.HOME) {
+                    predictiveEnter() togetherWith predictiveExit()
+                } else {
+                    slideFadeInFromRight() togetherWith slideFadeOutToLeft()
+                }
+            },
+            label = "screen_transition",
+            modifier = Modifier.fillMaxSize()
+        ) { screen ->
+            when (screen) {
+                AppScreen.HOME -> {
                     FilesScreen(
                         uiState = uiState,
-                        onOpenFileClick = onOpenFilePicker,
-                        onSaveFileClick = { viewModel.onSaveFile(contentResolver) },
-                        onExportFileClick = onExportFilePicker,
-                        onCreateNewFile = { name, format, src, tgt ->
-                            viewModel.onCreateNewFile(name, format, src, tgt)
-                        },
-                        onSourceLocaleChanged = viewModel::onSourceLocaleChanged,
-                        onTargetLocaleChanged = viewModel::onTargetLocaleChanged
+                        onOpenFilePicker = onOpenFilePicker,
+                        onNavigateToSettings = { viewModel.onNavigateToScreen(AppScreen.SETTINGS) },
+                        onSelectProject = viewModel::onSelectProject,
+                        onDeleteProject = viewModel::onDeleteProject,
+                        onOpenExportDialog = viewModel::onOpenExportDialog,
+                        onConfirmImport = viewModel::onConfirmImport,
+                        onCancelImport = viewModel::onCancelImport,
+                        onDismissExportDialog = viewModel::onDismissExportDialog,
+                        onConfirmExportZip = { selectedLocales ->
+                            val doc = uiState.exportingProject ?: uiState.activeProject
+                            val baseName = doc.fileName.substringBeforeLast(".")
+                            onRequestExportZip("${baseName}_translations.zip", selectedLocales)
+                        }
                     )
                 }
-                BottomNavDestination.STRINGS -> {
-                    StringsScreen(
+                AppScreen.PROJECT_DETAIL -> {
+                    ProjectDetailScreen(
                         uiState = uiState,
-                        onSearchQueryChanged = viewModel::onSearchQueryChanged,
-                        onAddNewString = viewModel::onAddNewString,
-                        onUpdateString = viewModel::onUpdateStringDetails,
-                        onDeleteString = viewModel::onDeleteString
-                    )
-                }
-                BottomNavDestination.TRANSLATE -> {
-                    TranslateScreen(
-                        uiState = uiState,
-                        onOpenFileClick = onOpenFilePicker,
+                        onNavigateBack = viewModel::onNavigateBack,
+                        onSelectDetailTab = viewModel::onSelectDetailTab,
                         onSearchQueryChanged = viewModel::onSearchQueryChanged,
                         onStatusFilterSelected = viewModel::onStatusFilterSelected,
                         onEditItemClicked = viewModel::onEditItemClicked,
@@ -96,12 +98,17 @@ fun AppNavHost(
                         onSaveTranslation = viewModel::onSaveTranslation,
                         onAutoTranslateItem = viewModel::onAutoTranslateItem,
                         onAutoTranslateAllUntranslated = viewModel::onAutoTranslateAllUntranslated,
-                        onTranslateSingleItemDirect = onTranslateDirect
+                        onTranslateSingleItemDirect = onTranslateDirect,
+                        onTargetLocaleChanged = viewModel::onTargetLocaleChanged,
+                        onAddNewString = viewModel::onAddNewString,
+                        onUpdateString = viewModel::onUpdateStringDetails,
+                        onDeleteString = viewModel::onDeleteString
                     )
                 }
-                BottomNavDestination.SETTINGS -> {
+                AppScreen.SETTINGS -> {
                     SettingsScreen(
                         uiState = uiState,
+                        onNavigateBack = viewModel::onNavigateBack,
                         onThemeModeChanged = viewModel::onThemeModeChanged,
                         onDynamicColorChanged = viewModel::onDynamicColorChanged
                     )

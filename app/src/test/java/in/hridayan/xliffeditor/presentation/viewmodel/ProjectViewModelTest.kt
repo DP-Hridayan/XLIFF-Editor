@@ -1,15 +1,16 @@
 package `in`.hridayan.xliffeditor.presentation.viewmodel
 
 import android.content.ContentResolver
+import android.net.TestUri
 import android.net.Uri
 import `in`.hridayan.xliffeditor.domain.model.LoadedDocument
+import `in`.hridayan.xliffeditor.domain.model.PendingImportDocument
 import `in`.hridayan.xliffeditor.domain.model.SingleStringItem
 import `in`.hridayan.xliffeditor.domain.model.TranslationStatus
 import `in`.hridayan.xliffeditor.domain.repository.AppPreferences
 import `in`.hridayan.xliffeditor.domain.repository.DocumentRepository
 import `in`.hridayan.xliffeditor.domain.repository.DocumentSessionRepository
 import `in`.hridayan.xliffeditor.domain.translation.TranslationEngine
-import `in`.hridayan.xliffeditor.presentation.navigation.BottomNavDestination
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -19,6 +20,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -30,7 +32,17 @@ class ProjectViewModelTest {
 
     private val fakeRepo = object : DocumentRepository {
         override suspend fun loadDocument(uri: Uri, contentResolver: ContentResolver): Result<LoadedDocument> =
-            Result.success(LoadedDocument(uri = uri, fileName = "test.xml", items = emptyList()))
+            Result.success(
+                LoadedDocument(
+                    uri = uri,
+                    fileName = "test_import.xml",
+                    sourceLocale = "EN-US",
+                    targetLocale = "VI-VN",
+                    items = listOf(
+                        SingleStringItem(key = "hello", sourceValue = "Hello")
+                    )
+                )
+            )
         override suspend fun saveDocument(uri: Uri, document: LoadedDocument, contentResolver: ContentResolver): Result<Unit> =
             Result.success(Unit)
         override suspend fun exportDocument(uri: Uri, document: LoadedDocument, contentResolver: ContentResolver): Result<Unit> =
@@ -54,13 +66,30 @@ class ProjectViewModelTest {
     }
 
     private val fakeSessionRepo = object : DocumentSessionRepository {
-        var savedDoc: LoadedDocument? = null
-        override suspend fun saveSession(document: LoadedDocument) {
-            savedDoc = document
+        var savedProjects: List<LoadedDocument> = emptyList()
+        var savedActiveId: String? = null
+
+        override suspend fun saveProjects(projects: List<LoadedDocument>, activeId: String?) {
+            savedProjects = projects
+            savedActiveId = activeId
         }
-        override suspend fun loadSession(): LoadedDocument? = savedDoc
+
+        override suspend fun loadProjects(): Pair<List<LoadedDocument>, String?> {
+            return Pair(savedProjects, savedActiveId)
+        }
+
+        override suspend fun saveSession(document: LoadedDocument) {
+            savedProjects = listOf(document)
+            savedActiveId = document.id
+        }
+
+        override suspend fun loadSession(): LoadedDocument? {
+            return savedProjects.firstOrNull()
+        }
+
         override suspend fun clearSession() {
-            savedDoc = null
+            savedProjects = emptyList()
+            savedActiveId = null
         }
     }
 
@@ -69,7 +98,8 @@ class ProjectViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        fakeSessionRepo.savedDoc = null
+        fakeSessionRepo.savedProjects = emptyList()
+        fakeSessionRepo.savedActiveId = null
         viewModel = ProjectViewModel(fakeRepo, fakeTranslator, fakePrefs, fakeSessionRepo)
     }
 
@@ -79,17 +109,17 @@ class ProjectViewModelTest {
     }
 
     @Test
-    fun testTabNavigation() {
-        assertEquals(BottomNavDestination.TRANSLATE, viewModel.uiState.value.currentDestination)
-        viewModel.onTabSelected(BottomNavDestination.FILES)
-        assertEquals(BottomNavDestination.FILES, viewModel.uiState.value.currentDestination)
-        viewModel.onTabSelected(BottomNavDestination.STRINGS)
-        assertEquals(BottomNavDestination.STRINGS, viewModel.uiState.value.currentDestination)
+    fun testScreenNavigation() {
+        assertEquals(AppScreen.HOME, viewModel.uiState.value.currentScreen)
+        viewModel.onNavigateToScreen(AppScreen.SETTINGS)
+        assertEquals(AppScreen.SETTINGS, viewModel.uiState.value.currentScreen)
+        viewModel.onNavigateBack()
+        assertEquals(AppScreen.HOME, viewModel.uiState.value.currentScreen)
     }
 
     @Test
-    fun testInitialStringsEmpty() {
-        assertTrue(viewModel.uiState.value.document.items.isEmpty())
+    fun testInitialProjectsEmpty() {
+        assertTrue(viewModel.uiState.value.projects.isEmpty())
         assertTrue(viewModel.uiState.value.filteredItems.isEmpty())
     }
 
@@ -102,8 +132,7 @@ class ProjectViewModelTest {
         assertNotNull(added)
         assertEquals("Submit Now", added?.sourceValue)
         assertEquals(TranslationStatus.UNTRANSLATED, added?.status)
-        assertNotNull(fakeSessionRepo.savedDoc)
-        assertEquals(1, fakeSessionRepo.savedDoc?.items?.size)
+        assertEquals(1, fakeSessionRepo.savedProjects.size)
 
         viewModel.onAutoTranslateItem("btn_submit")
         testScheduler.advanceUntilIdle()
@@ -115,11 +144,12 @@ class ProjectViewModelTest {
 
     @Test
     fun testSessionRestorationOnLaunch() = runTest {
-        // Pre-populate session
-        fakeSessionRepo.savedDoc = LoadedDocument(
-            fileName = "app_strings.xml",
-            items = listOf(
-                SingleStringItem(key = "title", sourceValue = "Hello World", status = TranslationStatus.UNTRANSLATED)
+        fakeSessionRepo.savedProjects = listOf(
+            LoadedDocument(
+                fileName = "app_strings.xml",
+                items = listOf(
+                    SingleStringItem(key = "title", sourceValue = "Hello World", status = TranslationStatus.UNTRANSLATED)
+                )
             )
         )
 
@@ -127,34 +157,110 @@ class ProjectViewModelTest {
         testScheduler.advanceUntilIdle()
 
         assertEquals("app_strings.xml", newViewModel.uiState.value.document.fileName)
-        assertEquals(1, newViewModel.uiState.value.document.items.size)
+        assertEquals(1, newViewModel.uiState.value.projects.size)
         assertEquals("title", newViewModel.uiState.value.document.items[0].key)
     }
 
     @Test
-    fun testAutoTranslateAllProgress() = runTest {
-        viewModel.onAddNewString("str1", "One", null, true)
-        viewModel.onAddNewString("str2", "Two", null, true)
+    fun testImportConfirmationFlow() = runTest {
+        val dummyUri = TestUri("/res/values-es/strings.xml")
+        viewModel.onFilePicked(dummyUri, object : ContentResolver(null) {})
         testScheduler.advanceUntilIdle()
+
+        val pending = viewModel.uiState.value.pendingImportDocument
+        assertNotNull(pending)
+        assertEquals("test_import.xml", pending?.fileName)
+        assertEquals("ES-ES", pending?.detectedSourceLocale)
+
+        viewModel.onConfirmImport("FR-FR")
+        testScheduler.advanceUntilIdle()
+
+        assertNull(viewModel.uiState.value.pendingImportDocument)
+        assertEquals(1, viewModel.uiState.value.projects.size)
+        assertEquals(AppScreen.PROJECT_DETAIL, viewModel.uiState.value.currentScreen)
+        assertEquals("FR-FR", viewModel.uiState.value.activeProject.sourceLocale)
+    }
+
+    @Test
+    fun testDeleteProject() = runTest {
+        viewModel.onAddNewString("k1", "v1", null, true)
+        testScheduler.advanceUntilIdle()
+        val docId = viewModel.uiState.value.activeProject.id
+        assertEquals(1, viewModel.uiState.value.projects.size)
+
+        viewModel.onDeleteProject(docId)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(0, viewModel.uiState.value.projects.size)
+        assertEquals(AppScreen.HOME, viewModel.uiState.value.currentScreen)
+    }
+
+    @Test
+    fun testNonTranslatableStringsExcludedFromAutoTranslate() = runTest {
+        viewModel.onAddNewString("not_translatable", "Do Not Translate", "Comment", false)
+        viewModel.onAddNewString("translatable", "Translate Me", null, true)
+        testScheduler.advanceUntilIdle()
+
+        assertEquals(1, viewModel.uiState.value.nonTranslatableCount)
+        assertEquals(1, viewModel.uiState.value.needsTranslationCount)
+
+        viewModel.onAutoTranslateItem("not_translatable")
+        testScheduler.advanceUntilIdle()
+
+        val nonTransItem = viewModel.uiState.value.document.items.find { it.key == "not_translatable" }
+        assertEquals(null, nonTransItem?.targetValue)
+        assertEquals(TranslationStatus.UNTRANSLATED, nonTransItem?.status)
+        assertTrue(viewModel.uiState.value.statusMessage?.contains("Cannot translate") == true)
 
         viewModel.onAutoTranslateAllUntranslated()
         testScheduler.advanceUntilIdle()
 
-        val state = viewModel.uiState.value
-        assertEquals(false, state.isTranslating)
-        assertEquals(100, state.translationProgressPercent)
-        assertEquals(2, state.translatedBatchCount)
-        assertEquals(2, state.totalBatchCount)
-        assertEquals(TranslationStatus.TRANSLATED, state.document.items[0].status)
-        assertEquals(TranslationStatus.TRANSLATED, state.document.items[1].status)
+        val transItem = viewModel.uiState.value.document.items.find { it.key == "translatable" }
+        assertEquals(TranslationStatus.TRANSLATED, transItem?.status)
+
+        val nonTransItemAfter = viewModel.uiState.value.document.items.find { it.key == "not_translatable" }
+        assertEquals(null, nonTransItemAfter?.targetValue)
+        assertEquals(TranslationStatus.UNTRANSLATED, nonTransItemAfter?.status)
     }
 
     @Test
-    fun testThemeSwitching() {
-        viewModel.onThemeModeChanged(AppThemeMode.DARK)
-        assertEquals(AppThemeMode.DARK, viewModel.uiState.value.themeMode)
+    fun testMultiLocaleTranslationSwitching() = runTest {
+        viewModel.onAddNewString("greeting", "Hello", "Context note", true)
+        testScheduler.advanceUntilIdle()
 
-        viewModel.onDynamicColorChanged(false)
-        assertEquals(false, viewModel.uiState.value.dynamicColor)
+        viewModel.onSaveTranslation("greeting", "Xin chao", TranslationStatus.TRANSLATED)
+        testScheduler.advanceUntilIdle()
+
+        val itemVi = viewModel.uiState.value.document.items.first()
+        assertEquals("Xin chao", itemVi.targetValue)
+        assertEquals(TranslationStatus.TRANSLATED, itemVi.status)
+
+        viewModel.onTargetLocaleChanged("ES-ES")
+        testScheduler.advanceUntilIdle()
+
+        val itemEs = viewModel.uiState.value.document.items.first()
+        assertEquals(null, itemEs.targetValue)
+        assertEquals(TranslationStatus.UNTRANSLATED, itemEs.status)
+
+        viewModel.onSaveTranslation("greeting", "Hola", TranslationStatus.TRANSLATED)
+        testScheduler.advanceUntilIdle()
+
+        val itemEsSaved = viewModel.uiState.value.document.items.first()
+        assertEquals("Hola", itemEsSaved.targetValue)
+        assertEquals(TranslationStatus.TRANSLATED, itemEsSaved.status)
+
+        viewModel.onTargetLocaleChanged("VI-VN")
+        testScheduler.advanceUntilIdle()
+
+        val itemViRestored = viewModel.uiState.value.document.items.first()
+        assertEquals("Xin chao", itemViRestored.targetValue)
+        assertEquals(TranslationStatus.TRANSLATED, itemViRestored.status)
+
+        viewModel.onTargetLocaleChanged("ES-ES")
+        testScheduler.advanceUntilIdle()
+
+        val itemEsRestored = viewModel.uiState.value.document.items.first()
+        assertEquals("Hola", itemEsRestored.targetValue)
+        assertEquals(TranslationStatus.TRANSLATED, itemEsRestored.status)
     }
 }

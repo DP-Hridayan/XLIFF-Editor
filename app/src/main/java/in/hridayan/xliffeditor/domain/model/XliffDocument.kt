@@ -19,5 +19,6 @@ data class XliffUnit(
     val target: String? = null,
     val state: String? = null,
     val approved: Boolean = false,
+    val translate: Boolean = true,
     val note: String? = null
 )

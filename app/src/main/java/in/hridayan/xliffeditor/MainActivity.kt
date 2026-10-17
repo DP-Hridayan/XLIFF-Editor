@@ -9,9 +9,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
+import `in`.hridayan.settingsgraph.ui.LocalSettingGraphState
+import `in`.hridayan.settingsgraph.ui.rememberSettingsGraphState
 import `in`.hridayan.xliffeditor.core.ui.theme.XliffEditorTheme
 import `in`.hridayan.xliffeditor.presentation.navigation.AppNavHost
 import `in`.hridayan.xliffeditor.presentation.viewmodel.AppThemeMode
@@ -54,36 +60,46 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            val exportDocumentLauncher = rememberLauncherForActivityResult(
-                contract = ActivityResultContracts.CreateDocument("application/xml")
+            var pendingZipLocales by remember { mutableStateOf<Set<String>?>(null) }
+
+            val exportZipLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.CreateDocument("application/zip")
             ) { uri ->
-                uri?.let { projectViewModel.onExportFile(it, contentResolver) }
+                val locales = pendingZipLocales
+                if (uri != null && locales != null) {
+                    val outputStream = contentResolver.openOutputStream(uri)
+                    if (outputStream != null) {
+                        projectViewModel.onExportZip(outputStream, locales)
+                    }
+                } else {
+                    projectViewModel.onDismissExportDialog()
+                }
+                pendingZipLocales = null
             }
+
+            val settingsGraphState = rememberSettingsGraphState()
 
             XliffEditorTheme(
                 darkTheme = isDark,
                 dynamicColor = uiState.dynamicColor,
                 amoled = isAmoled
             ) {
-                AppNavHost(
-                    viewModel = projectViewModel,
-                    contentResolver = contentResolver,
-                    onOpenFilePicker = {
-                        openDocumentLauncher.launch(
-                            arrayOf(
-                                "*/*",
-                                "text/xml",
-                                "application/xml",
-                                "application/x-xliff+xml"
-                            )
-                        )
-                    },
-                    onExportFilePicker = {
-                        val fileName = uiState.document.fileName
-                        exportDocumentLauncher.launch(fileName)
-                    },
-                    onTranslateDirect = projectViewModel::translateDirect
-                )
+                CompositionLocalProvider(
+                    LocalSettingGraphState provides settingsGraphState
+                ) {
+                    AppNavHost(
+                        viewModel = projectViewModel,
+                        contentResolver = contentResolver,
+                        onOpenFilePicker = {
+                            openDocumentLauncher.launch(arrayOf("*/*"))
+                        },
+                        onRequestExportZip = { suggestedFileName, locales ->
+                            pendingZipLocales = locales
+                            exportZipLauncher.launch(suggestedFileName)
+                        },
+                        onTranslateDirect = projectViewModel::translateDirect
+                    )
+                }
             }
         }
     }

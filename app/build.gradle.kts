@@ -79,6 +79,10 @@ android {
             )
         }
     }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 tasks.withType<KotlinCompile>().configureEach {

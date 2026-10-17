@@ -15,10 +15,11 @@ import javax.xml.parsers.DocumentBuilderFactory
 class XmlStringParser {
 
     fun parse(xmlContent: String): List<TranslatableItem> {
+        val sanitizedContent = XmlSanitizer.sanitize(xmlContent)
         val factory = DocumentBuilderFactory.newInstance()
         factory.isNamespaceAware = true
         val builder = factory.newDocumentBuilder()
-        val stream = ByteArrayInputStream(xmlContent.toByteArray(StandardCharsets.UTF_8))
+        val stream = ByteArrayInputStream(sanitizedContent.toByteArray(StandardCharsets.UTF_8))
         val document = builder.parse(stream)
         document.documentElement.normalize()
 
@@ -67,10 +68,16 @@ class XmlStringParser {
         val rawText = element.textContent ?: ""
         val unescapedText = AndroidXmlEscaper.unescape(rawText)
 
+        val commentAttr = element.getAttribute("comment").takeIf { it.isNotBlank() }
+            ?: element.getAttribute("description").takeIf { it.isNotBlank() }
+            ?: element.getAttribute("tools:comment").takeIf { it.isNotBlank() }
+            ?: element.getAttribute("tools:description").takeIf { it.isNotBlank() }
+        val finalComment = commentAttr ?: comment
+
         return SingleStringItem(
             key = key,
             sourceValue = unescapedText,
-            comment = comment,
+            comment = finalComment,
             isTranslatable = isTranslatable,
             isFormatted = isFormatted
         )
@@ -100,10 +107,16 @@ class XmlStringParser {
             }
         }
 
+        val commentAttr = element.getAttribute("comment").takeIf { it.isNotBlank() }
+            ?: element.getAttribute("description").takeIf { it.isNotBlank() }
+            ?: element.getAttribute("tools:comment").takeIf { it.isNotBlank() }
+            ?: element.getAttribute("tools:description").takeIf { it.isNotBlank() }
+        val finalComment = commentAttr ?: comment
+
         return PluralItem(
             key = key,
             sourceQuantities = quantityMap,
-            comment = comment,
+            comment = finalComment,
             isTranslatable = isTranslatable
         )
     }

@@ -18,7 +18,9 @@ data class SingleStringItem(
         TranslationStatus.UNTRANSLATED
     } else {
         TranslationStatus.TRANSLATED
-    }
+    },
+    val translationsByLocale: Map<String, String> = emptyMap(),
+    val statusesByLocale: Map<String, TranslationStatus> = emptyMap()
 ) : TranslatableItem
 
 enum class PluralQuantity {

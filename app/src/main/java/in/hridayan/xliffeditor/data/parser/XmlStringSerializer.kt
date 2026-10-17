@@ -16,10 +16,6 @@ class XmlStringSerializer(
         sb.append("<resources>\n")
 
         for (item in items) {
-            item.comment?.takeIf { it.isNotBlank() }?.let { comment ->
-                sb.append(indent).append("<!-- ").append(comment).append(" -->\n")
-            }
-
             when (item) {
                 is SingleStringItem -> {
                     val value = item.targetValue ?: item.sourceValue
@@ -28,6 +24,14 @@ class XmlStringSerializer(
                         .append("<string name=\"")
                         .append(item.key)
                         .append("\"")
+                    if (item.comment?.isNotBlank() == true) {
+                        val escapedComment = item.comment
+                            .replace("&", "&amp;")
+                            .replace("\"", "&quot;")
+                            .replace("<", "&lt;")
+                            .replace(">", "&gt;")
+                        sb.append(" comment=\"").append(escapedComment).append("\"")
+                    }
                     if (!item.isTranslatable) {
                         sb.append(" translatable=\"false\"")
                     }

@@ -6,6 +6,9 @@ object AndroidXmlEscaper {
         return value
             .replace("\\'", "'")
             .replace("\\\"", "\"")
+            .replace("\\&", "&")
+            .replace("\\@", "@")
+            .replace("\\?", "?")
             .replace("\\n", "\n")
             .replace("\\t", "\t")
     }

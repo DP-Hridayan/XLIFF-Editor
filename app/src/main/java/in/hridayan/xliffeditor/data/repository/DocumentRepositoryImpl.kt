@@ -99,6 +99,7 @@ class DocumentRepositoryImpl @Inject constructor() : DocumentRepository {
                 sourceValue = unit.source,
                 targetValue = unit.target,
                 comment = unit.note,
+                isTranslatable = unit.translate,
                 status = status
             )
         } ?: emptyList()
@@ -131,6 +132,7 @@ class DocumentRepositoryImpl @Inject constructor() : DocumentRepository {
                         target = item.targetValue,
                         state = state,
                         approved = item.status == TranslationStatus.TRANSLATED,
+                        translate = item.isTranslatable,
                         note = item.comment
                     )
                 }

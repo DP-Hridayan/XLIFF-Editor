@@ -8,19 +8,22 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import `in`.hridayan.xliffeditor.domain.model.FileFormat
 import `in`.hridayan.xliffeditor.domain.model.LoadedDocument
+import `in`.hridayan.xliffeditor.domain.model.PendingImportDocument
 import `in`.hridayan.xliffeditor.domain.model.SingleStringItem
 import `in`.hridayan.xliffeditor.domain.model.TranslationStatus
 import `in`.hridayan.xliffeditor.domain.repository.AppPreferences
 import `in`.hridayan.xliffeditor.domain.repository.DocumentRepository
 import `in`.hridayan.xliffeditor.domain.repository.DocumentSessionRepository
 import `in`.hridayan.xliffeditor.domain.translation.TranslationEngine
+import `in`.hridayan.xliffeditor.domain.usecase.DetectSourceLocaleUseCase
+import `in`.hridayan.xliffeditor.domain.usecase.ExportZipUseCase
 import `in`.hridayan.xliffeditor.domain.usecase.FilterAndSearchUseCase
-import `in`.hridayan.xliffeditor.presentation.navigation.BottomNavDestination
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.OutputStream
 import javax.inject.Inject
 
 @HiltViewModel
@@ -28,7 +31,9 @@ class ProjectViewModel @Inject constructor(
     private val documentRepository: DocumentRepository,
     private val translationEngine: TranslationEngine,
     private val appPreferences: AppPreferences,
-    private val documentSessionRepository: DocumentSessionRepository
+    private val documentSessionRepository: DocumentSessionRepository,
+    private val detectSourceLocaleUseCase: DetectSourceLocaleUseCase = DetectSourceLocaleUseCase(),
+    private val exportZipUseCase: ExportZipUseCase = ExportZipUseCase()
 ) : ViewModel() {
 
     private val filterAndSearchUseCase = FilterAndSearchUseCase()
@@ -37,24 +42,21 @@ class ProjectViewModel @Inject constructor(
         ProjectUiState(
             themeMode = appPreferences.getThemeMode(),
             dynamicColor = appPreferences.isDynamicColor()
-        ).let { initial ->
-            initial.copy(filteredItems = initial.document.items)
-        }
+        )
     )
     val uiState: StateFlow<ProjectUiState> = _uiState.asStateFlow()
 
     init {
         viewModelScope.launch {
-            val savedSession = documentSessionRepository.loadSession()
-            if (savedSession != null) {
+            val (savedProjects, savedActiveId) = documentSessionRepository.loadProjects()
+            if (savedProjects.isNotEmpty()) {
+                val activeId = savedActiveId ?: savedProjects.first().id
+                val activeDoc = savedProjects.find { it.id == activeId } ?: savedProjects.first()
+                val filtered = filterAndSearchUseCase(activeDoc.items, "", null)
                 _uiState.update { current ->
-                    val filtered = filterAndSearchUseCase(
-                        savedSession.items,
-                        current.searchQuery,
-                        current.selectedStatusFilter
-                    )
                     current.copy(
-                        document = savedSession,
+                        projects = savedProjects,
+                        activeProjectId = activeId,
                         filteredItems = filtered
                     )
                 }
@@ -62,9 +64,28 @@ class ProjectViewModel @Inject constructor(
         }
     }
 
-    private fun persistSession(doc: LoadedDocument) {
+    private fun persistProjects(projects: List<LoadedDocument>, activeId: String?) {
         viewModelScope.launch {
-            documentSessionRepository.saveSession(doc)
+            documentSessionRepository.saveProjects(projects, activeId)
+        }
+    }
+
+    private fun updateActiveProject(transform: (LoadedDocument) -> LoadedDocument) {
+        _uiState.update { current ->
+            val active = current.activeProject
+            val updatedActive = transform(active)
+            val updatedProjects = if (current.projects.any { it.id == active.id }) {
+                current.projects.map { if (it.id == active.id) updatedActive else it }
+            } else {
+                listOf(updatedActive)
+            }
+            persistProjects(updatedProjects, updatedActive.id)
+            val filtered = filterAndSearchUseCase(updatedActive.items, current.searchQuery, current.selectedStatusFilter)
+            current.copy(
+                projects = updatedProjects,
+                activeProjectId = updatedActive.id,
+                filteredItems = filtered
+            )
         }
     }
 
@@ -78,20 +99,46 @@ class ProjectViewModel @Inject constructor(
         _uiState.update { it.copy(dynamicColor = enabled) }
     }
 
-    fun onTabSelected(destination: BottomNavDestination) {
-        _uiState.update { it.copy(currentDestination = destination) }
+    fun onNavigateToScreen(screen: AppScreen) {
+        _uiState.update { it.copy(currentScreen = screen) }
+    }
+
+    fun onNavigateBack() {
+        _uiState.update { current ->
+            when (current.currentScreen) {
+                AppScreen.PROJECT_DETAIL, AppScreen.SETTINGS -> current.copy(currentScreen = AppScreen.HOME)
+                AppScreen.HOME -> current
+            }
+        }
+    }
+
+    fun onSelectProject(projectId: String) {
+        _uiState.update { current ->
+            val selected = current.projects.find { it.id == projectId } ?: current.activeProject
+            val filtered = filterAndSearchUseCase(selected.items, current.searchQuery, current.selectedStatusFilter)
+            current.copy(
+                activeProjectId = selected.id,
+                filteredItems = filtered,
+                activeDetailTab = DetailTab.TRANSLATE,
+                currentScreen = AppScreen.PROJECT_DETAIL
+            )
+        }
+    }
+
+    fun onSelectDetailTab(tab: DetailTab) {
+        _uiState.update { it.copy(activeDetailTab = tab) }
     }
 
     fun onSearchQueryChanged(query: String) {
         _uiState.update { current ->
-            val filtered = filterAndSearchUseCase(current.document.items, query, current.selectedStatusFilter)
+            val filtered = filterAndSearchUseCase(current.activeProject.items, query, current.selectedStatusFilter)
             current.copy(searchQuery = query, filteredItems = filtered)
         }
     }
 
     fun onStatusFilterSelected(status: TranslationStatus?) {
         _uiState.update { current ->
-            val filtered = filterAndSearchUseCase(current.document.items, current.searchQuery, status)
+            val filtered = filterAndSearchUseCase(current.activeProject.items, current.searchQuery, status)
             current.copy(selectedStatusFilter = status, filteredItems = filtered)
         }
     }
@@ -105,38 +152,46 @@ class ProjectViewModel @Inject constructor(
     }
 
     fun onSaveTranslation(key: String, newTarget: String, newStatus: TranslationStatus) {
-        _uiState.update { current ->
-            val updatedItems = current.document.items.map { item ->
+        val currentTargetLocale = _uiState.value.activeProject.targetLocale
+        val targetVal = newTarget.ifBlank { null }
+        updateActiveProject { doc ->
+            val updatedItems = doc.items.map { item ->
                 if (item.key == key) {
+                    val updatedTranslations = if (targetVal != null) {
+                        item.translationsByLocale + (currentTargetLocale to targetVal)
+                    } else {
+                        item.translationsByLocale - currentTargetLocale
+                    }
+                    val updatedStatuses = item.statusesByLocale + (currentTargetLocale to newStatus)
                     item.copy(
-                        targetValue = newTarget.ifBlank { null },
-                        status = newStatus
+                        targetValue = targetVal,
+                        status = newStatus,
+                        translationsByLocale = updatedTranslations,
+                        statusesByLocale = updatedStatuses
                     )
                 } else {
                     item
                 }
             }
-            val updatedDoc = current.document.copy(items = updatedItems)
-            persistSession(updatedDoc)
-            val filtered = filterAndSearchUseCase(updatedItems, current.searchQuery, current.selectedStatusFilter)
-            current.copy(
-                document = updatedDoc,
-                filteredItems = filtered,
-                editingItem = null
-            )
+            doc.copy(items = updatedItems)
         }
+        _uiState.update { it.copy(editingItem = null) }
     }
 
     fun onAutoTranslateItem(key: String) {
         val current = _uiState.value
-        val item = current.document.items.find { it.key == key } ?: return
+        val item = current.activeProject.items.find { it.key == key } ?: return
+        if (!item.isTranslatable) {
+            _uiState.update { it.copy(statusMessage = "Cannot translate: '$key' is marked translatable=false") }
+            return
+        }
 
         viewModelScope.launch {
             _uiState.update { it.copy(translatingItemKey = key) }
             val result = translationEngine.translate(
                 text = item.sourceValue,
-                sourceLanguage = current.document.sourceLocale,
-                targetLanguage = current.document.targetLocale
+                sourceLanguage = current.activeProject.sourceLocale,
+                targetLanguage = current.activeProject.targetLocale
             )
 
             result.onSuccess { translatedText ->
@@ -146,7 +201,7 @@ class ProjectViewModel @Inject constructor(
                     newStatus = TranslationStatus.TRANSLATED
                 )
             }.onFailure { error ->
-                Log.e("ProjectViewModel", "Translation failed for key: $key", error)
+                Log.e(TAG, "Translation failed for key: $key", error)
                 val msg = error.localizedMessage?.takeIf { it.isNotBlank() }
                     ?: error.message?.takeIf { it.isNotBlank() }
                     ?: error.javaClass.simpleName
@@ -161,8 +216,8 @@ class ProjectViewModel @Inject constructor(
 
     fun onAutoTranslateAllUntranslated() {
         val current = _uiState.value
-        val untranslated = current.document.items.filter {
-            it.status == TranslationStatus.UNTRANSLATED || it.status == TranslationStatus.FUZZY
+        val untranslated = current.activeProject.items.filter {
+            it.isTranslatable && (it.status == TranslationStatus.UNTRANSLATED || it.status == TranslationStatus.FUZZY)
         }
         if (untranslated.isEmpty()) return
 
@@ -180,11 +235,11 @@ class ProjectViewModel @Inject constructor(
             }
 
             val downloadResult = translationEngine.downloadModelIfNeeded(
-                sourceLanguage = current.document.sourceLocale,
-                targetLanguage = current.document.targetLocale
+                sourceLanguage = current.activeProject.sourceLocale,
+                targetLanguage = current.activeProject.targetLocale
             )
             downloadResult.onFailure { error ->
-                Log.e("ProjectViewModel", "Model download failed", error)
+                Log.e(TAG, "Model download failed", error)
                 val msg = error.localizedMessage?.takeIf { it.isNotBlank() }
                     ?: error.message?.takeIf { it.isNotBlank() }
                     ?: error.javaClass.simpleName
@@ -203,8 +258,8 @@ class ProjectViewModel @Inject constructor(
             for ((index, item) in untranslated.withIndex()) {
                 val result = translationEngine.translate(
                     text = item.sourceValue,
-                    sourceLanguage = current.document.sourceLocale,
-                    targetLanguage = current.document.targetLocale
+                    sourceLanguage = current.activeProject.sourceLocale,
+                    targetLanguage = current.activeProject.targetLocale
                 )
                 if (result.isSuccess) {
                     val translatedText = result.getOrThrow()
@@ -243,118 +298,217 @@ class ProjectViewModel @Inject constructor(
         val trimmedKey = key.trim()
         if (trimmedKey.isBlank()) return
 
-        _uiState.update { current ->
-            if (current.document.items.any { it.key == trimmedKey }) {
-                current.copy(statusMessage = "Key '$trimmedKey' already exists")
-            } else {
-                val newItem = SingleStringItem(
-                    key = trimmedKey,
-                    sourceValue = sourceValue,
-                    targetValue = null,
-                    comment = comment?.ifBlank { null },
-                    isTranslatable = isTranslatable,
-                    status = TranslationStatus.UNTRANSLATED
-                )
-                val updatedItems = current.document.items + newItem
-                val updatedDoc = current.document.copy(items = updatedItems)
-                persistSession(updatedDoc)
-                val filtered = filterAndSearchUseCase(updatedItems, current.searchQuery, current.selectedStatusFilter)
-                current.copy(
-                    document = updatedDoc,
-                    filteredItems = filtered,
-                    statusMessage = "Added string '$trimmedKey'"
-                )
-            }
-        }
-    }
-
-    fun onDeleteString(key: String) {
-        _uiState.update { current ->
-            val updatedItems = current.document.items.filterNot { it.key == key }
-            val updatedDoc = current.document.copy(items = updatedItems)
-            persistSession(updatedDoc)
-            val filtered = filterAndSearchUseCase(updatedItems, current.searchQuery, current.selectedStatusFilter)
-            current.copy(
-                document = updatedDoc,
-                filteredItems = filtered,
-                statusMessage = "Deleted string '$key'"
+        updateActiveProject { doc ->
+            val newItem = SingleStringItem(
+                key = trimmedKey,
+                sourceValue = sourceValue,
+                targetValue = null,
+                comment = comment?.takeIf { it.isNotBlank() },
+                isTranslatable = isTranslatable,
+                status = TranslationStatus.UNTRANSLATED
             )
+            doc.copy(items = doc.items + newItem)
         }
     }
 
-    fun onUpdateStringDetails(oldKey: String, newKey: String, newSource: String, newComment: String?, isTranslatable: Boolean) {
-        val trimmedKey = newKey.trim()
-        if (trimmedKey.isBlank()) return
-
-        _uiState.update { current ->
-            val updatedItems = current.document.items.map { item ->
-                if (item.key == oldKey) {
+    fun onUpdateStringDetails(
+        originalKey: String,
+        newKey: String,
+        newSource: String,
+        newComment: String?,
+        isTranslatable: Boolean
+    ) {
+        updateActiveProject { doc ->
+            val updatedItems = doc.items.map { item ->
+                if (item.key == originalKey) {
                     item.copy(
-                        key = trimmedKey,
+                        key = newKey.trim(),
                         sourceValue = newSource,
-                        comment = newComment?.ifBlank { null },
+                        comment = newComment?.takeIf { it.isNotBlank() },
                         isTranslatable = isTranslatable
                     )
                 } else {
                     item
                 }
             }
-            val updatedDoc = current.document.copy(items = updatedItems)
-            persistSession(updatedDoc)
-            val filtered = filterAndSearchUseCase(updatedItems, current.searchQuery, current.selectedStatusFilter)
-            current.copy(document = updatedDoc, filteredItems = filtered)
+            doc.copy(items = updatedItems)
+        }
+    }
+
+    fun onDeleteString(key: String) {
+        updateActiveProject { doc ->
+            doc.copy(items = doc.items.filterNot { it.key == key })
         }
     }
 
     fun onTargetLocaleChanged(newLocale: String) {
-        _uiState.update { current ->
-            val updatedDoc = current.document.copy(targetLocale = newLocale)
-            persistSession(updatedDoc)
-            current.copy(document = updatedDoc)
+        val oldLocale = _uiState.value.activeProject.targetLocale
+        if (oldLocale == newLocale) return
+
+        updateActiveProject { doc ->
+            val updatedItems = doc.items.map { item ->
+                val savedTranslations = if (item.targetValue != null) {
+                    item.translationsByLocale + (oldLocale to item.targetValue)
+                } else {
+                    item.translationsByLocale
+                }
+                val savedStatuses = item.statusesByLocale + (oldLocale to item.status)
+
+                val newTarget = savedTranslations[newLocale]
+                val newStatus = savedStatuses[newLocale] ?: if (newTarget.isNullOrBlank()) {
+                    TranslationStatus.UNTRANSLATED
+                } else {
+                    TranslationStatus.TRANSLATED
+                }
+
+                item.copy(
+                    targetValue = newTarget,
+                    status = newStatus,
+                    translationsByLocale = savedTranslations,
+                    statusesByLocale = savedStatuses
+                )
+            }
+            doc.copy(targetLocale = newLocale, items = updatedItems)
         }
     }
 
     fun onSourceLocaleChanged(newLocale: String) {
-        _uiState.update { current ->
-            val updatedDoc = current.document.copy(sourceLocale = newLocale)
-            persistSession(updatedDoc)
-            current.copy(document = updatedDoc)
+        updateActiveProject { doc ->
+            doc.copy(sourceLocale = newLocale)
         }
     }
 
     fun onOpenFile(uri: Uri, contentResolver: ContentResolver) {
+        onFilePicked(uri, contentResolver)
+    }
+
+    fun onFilePicked(uri: Uri, contentResolver: ContentResolver) {
         viewModelScope.launch {
             val result = documentRepository.loadDocument(uri, contentResolver)
             result.onSuccess { doc ->
-                persistSession(doc)
+                val path = uri.path ?: doc.fileName
+                val detected = detectSourceLocaleUseCase(path, null)
                 _uiState.update { current ->
-                    val filtered = filterAndSearchUseCase(doc.items, current.searchQuery, current.selectedStatusFilter)
                     current.copy(
-                        document = doc,
-                        filteredItems = filtered,
-                        statusMessage = "Loaded ${doc.fileName} (${doc.items.size} strings)"
+                        pendingImportDocument = PendingImportDocument(
+                            uri = uri,
+                            fileName = doc.fileName,
+                            format = doc.format,
+                            detectedSourceLocale = detected,
+                            items = doc.items
+                        )
                     )
                 }
             }.onFailure { error ->
                 _uiState.update {
-                    it.copy(statusMessage = "Failed to open file: ${error.localizedMessage ?: "Unknown error"}")
+                    it.copy(statusMessage = "Failed to parse file: ${error.localizedMessage ?: "Unknown error"}")
                 }
             }
         }
     }
 
+    fun onConfirmImport(chosenSourceLocale: String) {
+        val pending = _uiState.value.pendingImportDocument ?: return
+        val newDoc = LoadedDocument(
+            uri = pending.uri,
+            fileName = pending.fileName,
+            format = pending.format,
+            sourceLocale = chosenSourceLocale,
+            targetLocale = if (chosenSourceLocale == "VI-VN") "EN-US" else "VI-VN",
+            items = pending.items
+        )
+
+        _uiState.update { current ->
+            val updatedProjects = current.projects + newDoc
+            persistProjects(updatedProjects, newDoc.id)
+            val filtered = filterAndSearchUseCase(newDoc.items, current.searchQuery, current.selectedStatusFilter)
+            current.copy(
+                projects = updatedProjects,
+                activeProjectId = newDoc.id,
+                filteredItems = filtered,
+                pendingImportDocument = null,
+                activeDetailTab = DetailTab.TRANSLATE,
+                currentScreen = AppScreen.PROJECT_DETAIL,
+                statusMessage = "Imported ${newDoc.fileName} (${newDoc.items.size} strings)"
+            )
+        }
+    }
+
+    fun onCancelImport() {
+        _uiState.update { it.copy(pendingImportDocument = null) }
+    }
+
+    fun onOpenExportDialog(project: LoadedDocument) {
+        _uiState.update { it.copy(exportingProject = project) }
+    }
+
+    fun onDismissExportDialog() {
+        _uiState.update { it.copy(exportingProject = null) }
+    }
+
+    fun onExportZip(outputStream: OutputStream, selectedLocales: Set<String>) {
+        val project = _uiState.value.exportingProject ?: return
+        viewModelScope.launch {
+            val result = exportZipUseCase(project, selectedLocales, outputStream)
+            result.onSuccess { count ->
+                _uiState.update {
+                    it.copy(
+                        exportingProject = null,
+                        statusMessage = "Exported $count language(s) to ZIP successfully"
+                    )
+                }
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        exportingProject = null,
+                        statusMessage = "Export failed: ${error.localizedMessage ?: "Unknown error"}"
+                    )
+                }
+            }
+        }
+    }
+
+    fun onDeleteProject(projectId: String) {
+        _uiState.update { current ->
+            val updatedProjects = current.projects.filterNot { it.id == projectId }
+            val newActiveId = if (current.activeProjectId == projectId) {
+                updatedProjects.firstOrNull()?.id
+            } else {
+                current.activeProjectId
+            }
+            persistProjects(updatedProjects, newActiveId)
+            val newActiveDoc = updatedProjects.find { it.id == newActiveId }
+            val filtered = filterAndSearchUseCase(
+                newActiveDoc?.items ?: emptyList(),
+                current.searchQuery,
+                current.selectedStatusFilter
+            )
+            current.copy(
+                projects = updatedProjects,
+                activeProjectId = newActiveId,
+                filteredItems = filtered,
+                currentScreen = if (updatedProjects.isEmpty() && current.currentScreen == AppScreen.PROJECT_DETAIL) {
+                    AppScreen.HOME
+                } else {
+                    current.currentScreen
+                },
+                statusMessage = "Project removed"
+            )
+        }
+    }
+
     fun onSaveFile(contentResolver: ContentResolver) {
         val current = _uiState.value
-        val uri = current.document.uri
+        val uri = current.activeProject.uri
         if (uri == null) {
             _uiState.update { it.copy(statusMessage = "No file path. Use Export to save to a new file.") }
             return
         }
 
         viewModelScope.launch {
-            val result = documentRepository.saveDocument(uri, current.document, contentResolver)
+            val result = documentRepository.saveDocument(uri, current.activeProject, contentResolver)
             result.onSuccess {
-                _uiState.update { it.copy(statusMessage = "Saved ${current.document.fileName} successfully") }
+                _uiState.update { it.copy(statusMessage = "Saved ${current.activeProject.fileName} successfully") }
             }.onFailure { error ->
                 _uiState.update {
                     it.copy(statusMessage = "Save failed: ${error.localizedMessage ?: "Unknown error"}")
@@ -366,16 +520,10 @@ class ProjectViewModel @Inject constructor(
     fun onExportFile(uri: Uri, contentResolver: ContentResolver) {
         val current = _uiState.value
         viewModelScope.launch {
-            val result = documentRepository.exportDocument(uri, current.document, contentResolver)
+            val result = documentRepository.exportDocument(uri, current.activeProject, contentResolver)
             result.onSuccess {
-                val updatedDoc = current.document.copy(uri = uri)
-                persistSession(updatedDoc)
-                _uiState.update {
-                    it.copy(
-                        document = updatedDoc,
-                        statusMessage = "Exported successfully"
-                    )
-                }
+                updateActiveProject { it.copy(uri = uri) }
+                _uiState.update { it.copy(statusMessage = "Exported successfully") }
             }.onFailure { error ->
                 _uiState.update {
                     it.copy(statusMessage = "Export failed: ${error.localizedMessage ?: "Unknown error"}")
@@ -393,11 +541,15 @@ class ProjectViewModel @Inject constructor(
             targetLocale = targetLocale,
             items = emptyList()
         )
-        persistSession(newDoc)
-        _uiState.update {
-            it.copy(
-                document = newDoc,
+        _uiState.update { current ->
+            val updatedProjects = current.projects + newDoc
+            persistProjects(updatedProjects, newDoc.id)
+            current.copy(
+                projects = updatedProjects,
+                activeProjectId = newDoc.id,
                 filteredItems = emptyList(),
+                activeDetailTab = DetailTab.TRANSLATE,
+                currentScreen = AppScreen.PROJECT_DETAIL,
                 statusMessage = "Created new ${format.displayName} file"
             )
         }
@@ -407,13 +559,17 @@ class ProjectViewModel @Inject constructor(
         val current = _uiState.value
         val result = translationEngine.translate(
             text = text,
-            sourceLanguage = current.document.sourceLocale,
-            targetLanguage = current.document.targetLocale
+            sourceLanguage = current.activeProject.sourceLocale,
+            targetLanguage = current.activeProject.targetLocale
         )
         return result.getOrNull()
     }
 
     fun onClearStatusMessage() {
         _uiState.update { it.copy(statusMessage = null) }
+    }
+
+    private companion object {
+        private const val TAG = "ProjectViewModel"
     }
 }

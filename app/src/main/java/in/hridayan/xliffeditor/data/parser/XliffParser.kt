@@ -12,10 +12,11 @@ import javax.xml.parsers.DocumentBuilderFactory
 class XliffParser {
 
     fun parse(xmlContent: String): XliffDocument {
+        val sanitizedContent = XmlSanitizer.sanitize(xmlContent)
         val factory = DocumentBuilderFactory.newInstance()
         factory.isNamespaceAware = true
         val builder = factory.newDocumentBuilder()
-        val stream = ByteArrayInputStream(xmlContent.toByteArray(StandardCharsets.UTF_8))
+        val stream = ByteArrayInputStream(sanitizedContent.toByteArray(StandardCharsets.UTF_8))
         val document = builder.parse(stream)
         document.documentElement.normalize()
 
@@ -39,6 +40,7 @@ class XliffParser {
                 val unitElem = unitNodes.item(j) as Element
                 val id = unitElem.getAttribute("id")
                 val approved = unitElem.getAttribute("approved").equals("yes", ignoreCase = true)
+                val translate = !unitElem.getAttribute("translate").equals("no", ignoreCase = true)
 
                 var sourceText = ""
                 var targetText: String? = null
@@ -68,6 +70,7 @@ class XliffParser {
                         target = targetText,
                         state = targetState,
                         approved = approved,
+                        translate = translate,
                         note = noteText
                     )
                 )

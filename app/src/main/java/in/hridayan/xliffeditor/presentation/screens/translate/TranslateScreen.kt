@@ -2,7 +2,11 @@
 
 package `in`.hridayan.xliffeditor.presentation.screens.translate
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,50 +21,61 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Translate
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.ui.draw.clip
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import `in`.hridayan.xliffeditor.R
+import `in`.hridayan.xliffeditor.core.ui.components.haptic.withHaptic
+import `in`.hridayan.xliffeditor.core.ui.theme.AshellYouAnimationSpecs
 import `in`.hridayan.xliffeditor.domain.model.SingleStringItem
 import `in`.hridayan.xliffeditor.domain.model.TranslationStatus
 import `in`.hridayan.xliffeditor.presentation.components.FilterOptionItem
 import `in`.hridayan.xliffeditor.presentation.components.SearchAndFilterBar
 import `in`.hridayan.xliffeditor.presentation.components.TranslateStringCard
-import `in`.hridayan.xliffeditor.presentation.components.XliffTopBar
 import `in`.hridayan.xliffeditor.presentation.screens.editor.EditTranslationBottomSheet
 import `in`.hridayan.xliffeditor.presentation.viewmodel.ProjectUiState
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
 fun TranslateScreen(
     uiState: ProjectUiState,
-    onOpenFileClick: () -> Unit,
     onSearchQueryChanged: (String) -> Unit,
     onStatusFilterSelected: (TranslationStatus?) -> Unit,
     onEditItemClicked: (SingleStringItem) -> Unit,
@@ -69,6 +84,7 @@ fun TranslateScreen(
     onAutoTranslateItem: (key: String) -> Unit,
     onAutoTranslateAllUntranslated: () -> Unit,
     onTranslateSingleItemDirect: suspend (text: String) -> String?,
+    onTargetLocaleChanged: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showFilterSheet by remember { mutableStateOf(false) }
@@ -78,17 +94,26 @@ fun TranslateScreen(
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
-        XliffTopBar(
-            fileName = uiState.document.fileName,
-            onOpenFileClick = onOpenFileClick
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         SearchAndFilterBar(
             query = uiState.searchQuery,
             onQueryChange = onSearchQueryChanged,
             onFilterClick = { showFilterSheet = true }
+        )
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        val filteredTargetLocales = remember(uiState.availableTargetLocales, uiState.document.sourceLocale) {
+            uiState.availableTargetLocales.filterNot {
+                it.equals(uiState.document.sourceLocale, ignoreCase = true)
+            }
+        }
+
+        TargetLocaleChipSelector(
+            selectedLocale = uiState.document.targetLocale,
+            locales = filteredTargetLocales,
+            onLocaleSelected = onTargetLocaleChanged
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -209,7 +234,7 @@ fun TranslateScreen(
                     )
                     Text(
                         text = if (uiState.document.items.isEmpty()) {
-                            "Open an Android strings.xml or XLIFF file to begin translating."
+                            "No strings found in this file."
                         } else {
                             "Try clearing your search query or changing status filter."
                         },
@@ -217,21 +242,6 @@ fun TranslateScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
-                    if (uiState.document.items.isEmpty()) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Button(
-                            onClick = onOpenFileClick,
-                            shape = RoundedCornerShape(100)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.FolderOpen,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = stringResource(R.string.open_file))
-                        }
-                    }
                 }
             }
         } else {
@@ -332,8 +342,220 @@ fun TranslateScreen(
                     }
                 )
 
+                FilterOptionItem(
+                    title = stringResource(R.string.untranslated),
+                    selected = uiState.selectedStatusFilter == TranslationStatus.UNTRANSLATED,
+                    onClick = {
+                        onStatusFilterSelected(TranslationStatus.UNTRANSLATED)
+                        showFilterSheet = false
+                    }
+                )
+
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
+    }
+}
+
+private const val CHIP_CONTAINER_CORNER_PERCENT = 50
+private const val CHIP_CORNER_PERCENT_ROUNDED = 50
+private const val CHIP_CORNER_PERCENT_DEFAULT = 25
+private const val SCROLL_FADE_WIDTH_DP = 36
+private const val CHIP_ROW_PADDING_DP = 12
+private const val CHIP_ROW_SPACING_DP = 6
+private const val CHIP_HORIZONTAL_PADDING_DP = 14
+private const val CHIP_VERTICAL_PADDING_DP = 8
+
+@Composable
+private fun TargetLocaleChipSelector(
+    selectedLocale: String,
+    locales: List<String>,
+    onLocaleSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val haptic = LocalHapticFeedback.current
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(listState) {
+        var previousStart = true
+        var previousEnd = false
+        var firstEmission = true
+
+        snapshotFlow {
+            Pair(
+                !listState.canScrollBackward,
+                !listState.canScrollForward
+            )
+        }
+            .distinctUntilChanged()
+            .collect { (atStart, atEnd) ->
+                if (firstEmission) {
+                    previousStart = atStart
+                    previousEnd = atEnd
+                    firstEmission = false
+                    return@collect
+                }
+
+                val reachedStart = atStart && !previousStart
+                val reachedEnd = atEnd && !previousEnd
+
+                if (reachedStart || reachedEnd) {
+                    haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                }
+
+                previousStart = atStart
+                previousEnd = atEnd
+            }
+    }
+
+    val leftFadeAlpha by animateFloatAsState(
+        targetValue = if (listState.canScrollBackward) 1f else 0f,
+        label = "leftFadeAlpha"
+    )
+    val rightFadeAlpha by animateFloatAsState(
+        targetValue = if (listState.canScrollForward) 1f else 0f,
+        label = "rightFadeAlpha"
+    )
+
+    val surfaceContainerColor = MaterialTheme.colorScheme.surfaceContainer
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(CHIP_CONTAINER_CORNER_PERCENT))
+            .background(surfaceContainerColor)
+            .drawWithContent {
+                drawContent()
+
+                val fadeWidthPx = SCROLL_FADE_WIDTH_DP.dp.toPx()
+
+                if (leftFadeAlpha > 0f) {
+                    drawRect(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(surfaceContainerColor, Color.Transparent),
+                            startX = 0f,
+                            endX = fadeWidthPx
+                        ),
+                        size = Size(fadeWidthPx, size.height),
+                        alpha = leftFadeAlpha
+                    )
+                }
+
+                if (rightFadeAlpha > 0f) {
+                    drawRect(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(Color.Transparent, surfaceContainerColor),
+                            startX = size.width - fadeWidthPx,
+                            endX = size.width
+                        ),
+                        topLeft = Offset(size.width - fadeWidthPx, 0f),
+                        size = Size(fadeWidthPx, size.height),
+                        alpha = rightFadeAlpha
+                    )
+                }
+            }
+    ) {
+        LazyRow(
+            state = listState,
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(all = CHIP_ROW_PADDING_DP.dp),
+            horizontalArrangement = Arrangement.spacedBy(CHIP_ROW_SPACING_DP.dp)
+        ) {
+            itemsIndexed(locales, key = { _, locale -> locale }) { index, locale ->
+                val isSelected = selectedLocale == locale
+                TargetLocaleChip(
+                    locale = locale,
+                    isSelected = isSelected,
+                    isFirst = index == 0,
+                    isLast = index == locales.lastIndex,
+                    onClick = { onLocaleSelected(locale) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TargetLocaleChip(
+    locale: String,
+    isSelected: Boolean,
+    isFirst: Boolean,
+    isLast: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val startCornerPercent by animateIntAsState(
+        targetValue = if (isSelected || isFirst) {
+            CHIP_CORNER_PERCENT_ROUNDED
+        } else {
+            CHIP_CORNER_PERCENT_DEFAULT
+        },
+        animationSpec = AshellYouAnimationSpecs.springInt,
+        label = "chipStartCornerPercent"
+    )
+
+    val endCornerPercent by animateIntAsState(
+        targetValue = if (isSelected || isLast) {
+            CHIP_CORNER_PERCENT_ROUNDED
+        } else {
+            CHIP_CORNER_PERCENT_DEFAULT
+        },
+        animationSpec = AshellYouAnimationSpecs.springInt,
+        label = "chipEndCornerPercent"
+    )
+
+    val containerColor by animateColorAsState(
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHighest
+        },
+        label = "chipContainerColor"
+    )
+
+    val contentColor by animateColorAsState(
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+        label = "chipContentColor"
+    )
+
+    Box(
+        modifier = modifier
+            .clip(
+                RoundedCornerShape(
+                    topStartPercent = startCornerPercent,
+                    topEndPercent = endCornerPercent,
+                    bottomEndPercent = endCornerPercent,
+                    bottomStartPercent = startCornerPercent
+                )
+            )
+            .background(containerColor)
+            .clickable(onClick = withHaptic { onClick() })
+            .padding(
+                horizontal = CHIP_HORIZONTAL_PADDING_DP.dp,
+                vertical = CHIP_VERTICAL_PADDING_DP.dp
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = formatLocaleChipLabel(locale),
+            style = MaterialTheme.typography.labelLarge.copy(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp
+            ),
+            color = contentColor
+        )
+    }
+}
+
+private fun formatLocaleChipLabel(locale: String): String {
+    val parts = locale.split("-", "_")
+    return if (parts.size == 2 && parts[0].equals(parts[1], ignoreCase = true)) {
+        parts[0].uppercase()
+    } else {
+        locale.uppercase()
     }
 }

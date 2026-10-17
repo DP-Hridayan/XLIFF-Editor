@@ -10,20 +10,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+private val BadgeHorizontalPadding: Dp = 8.dp
+private val BadgeVerticalPadding: Dp = 2.dp
+private const val CORNER_PERCENT = 100
 
 @Composable
 fun LocaleBadge(
     locale: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    contentColor: Color = MaterialTheme.colorScheme.onSurfaceVariant
 ) {
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(100))
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-            .padding(horizontal = 8.dp, vertical = 2.dp),
+            .clip(RoundedCornerShape(CORNER_PERCENT))
+            .background(containerColor)
+            .padding(horizontal = BadgeHorizontalPadding, vertical = BadgeVerticalPadding),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -33,7 +41,7 @@ fun LocaleBadge(
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 0.5.sp
             ),
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = contentColor
         )
     }
 }
