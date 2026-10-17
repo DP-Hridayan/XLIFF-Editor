@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -372,6 +373,7 @@ private const val CHIP_ROW_PADDING_DP = 12
 private const val CHIP_ROW_SPACING_DP = 6
 private const val CHIP_HORIZONTAL_PADDING_DP = 14
 private const val CHIP_VERTICAL_PADDING_DP = 8
+private const val CHIP_MIN_HEIGHT_DP = 36
 private const val ADD_CHIP_ICON_SIZE_DP = 16
 private const val ADD_CHIP_HORIZONTAL_PADDING_DP = 12
 
@@ -475,6 +477,7 @@ private fun TargetLocaleChipSelector(
         LazyRow(
             state = listState,
             modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
             contentPadding = PaddingValues(all = CHIP_ROW_PADDING_DP.dp),
             horizontalArrangement = Arrangement.spacedBy(CHIP_ROW_SPACING_DP.dp)
         ) {
@@ -502,8 +505,12 @@ private fun AddLocaleChip(
 ) {
     Box(
         modifier = modifier
+            .defaultMinSize(
+                minWidth = CHIP_MIN_HEIGHT_DP.dp,
+                minHeight = CHIP_MIN_HEIGHT_DP.dp
+            )
             .clip(RoundedCornerShape(CHIP_CORNER_PERCENT_ROUNDED))
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+            .background(MaterialTheme.colorScheme.tertiary)
             .clickable(onClick = withHaptic { onClick() })
             .padding(
                 horizontal = ADD_CHIP_HORIZONTAL_PADDING_DP.dp,
@@ -515,7 +522,7 @@ private fun AddLocaleChip(
             imageVector = Icons.Outlined.Add,
             contentDescription = stringResource(R.string.add_language),
             modifier = Modifier.size(ADD_CHIP_ICON_SIZE_DP.dp),
-            tint = MaterialTheme.colorScheme.onSurface
+            tint = MaterialTheme.colorScheme.onTertiary
         )
     }
 }
@@ -569,6 +576,7 @@ private fun TargetLocaleChip(
 
     Box(
         modifier = modifier
+            .defaultMinSize(minHeight = CHIP_MIN_HEIGHT_DP.dp)
             .clip(
                 RoundedCornerShape(
                     topStartPercent = startCornerPercent,

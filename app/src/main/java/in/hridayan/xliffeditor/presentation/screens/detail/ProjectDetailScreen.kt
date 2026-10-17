@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -26,26 +27,26 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import `in`.hridayan.xliffeditor.R
 import `in`.hridayan.xliffeditor.core.ui.components.haptic.withHaptic
 import `in`.hridayan.xliffeditor.domain.model.SingleStringItem
 import `in`.hridayan.xliffeditor.domain.model.TranslationStatus
-import `in`.hridayan.xliffeditor.presentation.components.LocaleBadge
+import `in`.hridayan.xliffeditor.presentation.components.SourceFileDetailsDialog
 import `in`.hridayan.xliffeditor.presentation.screens.strings.StringsScreen
 import `in`.hridayan.xliffeditor.presentation.screens.translate.TranslateScreen
 import `in`.hridayan.xliffeditor.presentation.viewmodel.DetailTab
 import `in`.hridayan.xliffeditor.presentation.viewmodel.ProjectUiState
-
-private val BadgeSpacing: Dp = 6.dp
-private val TopBarEndPadding: Dp = 12.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,6 +69,8 @@ fun ProjectDetailScreen(
     onAddCustomTargetLocale: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    var showDetailsDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
@@ -93,13 +96,11 @@ fun ProjectDetailScreen(
                     }
                 },
                 actions = {
-                    Row(
-                        modifier = Modifier.padding(end = TopBarEndPadding),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        LocaleBadge(locale = uiState.activeProject.format.displayName)
-                        Spacer(modifier = Modifier.width(BadgeSpacing))
-                        LocaleBadge(locale = uiState.activeProject.sourceLocale)
+                    IconButton(onClick = withHaptic { showDetailsDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = stringResource(R.string.file_info)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -196,5 +197,12 @@ fun ProjectDetailScreen(
                 }
             }
         }
+    }
+
+    if (showDetailsDialog) {
+        SourceFileDetailsDialog(
+            project = uiState.activeProject,
+            onDismiss = { showDetailsDialog = false }
+        )
     }
 }

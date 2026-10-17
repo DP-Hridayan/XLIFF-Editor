@@ -68,4 +68,8 @@
     <string name="search_languages_hint" comment="Search placeholder for language selector">Search languages or enter code…</string>
     <string name="custom_code" comment="Label for manual custom language code">Custom Language Code</string>
     <string name="mlkit_supported" comment="Status badge indicating language is supported by ML Kit">ML Kit Supported</string>
+    <string name="close">Close</string>
+    <string name="format" comment="Label for file format">Format</string>
+    <string name="file_name" comment="Label for file name">File Name</string>
+    <string name="non_translatable" comment="Label for non-translatable strings count">Non-translatable</string>
 </resources>
