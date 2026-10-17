@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,7 +31,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -56,7 +56,6 @@ import `in`.hridayan.xliffeditor.core.ui.components.card.CustomCard
 import `in`.hridayan.xliffeditor.core.ui.components.haptic.withHaptic
 import `in`.hridayan.xliffeditor.core.ui.theme.CardCornerShape
 import `in`.hridayan.xliffeditor.domain.model.LoadedDocument
-import `in`.hridayan.xliffeditor.domain.model.TranslationStatus
 import `in`.hridayan.xliffeditor.presentation.components.ExportBottomSheet
 import `in`.hridayan.xliffeditor.presentation.components.ImportConfirmationBottomSheet
 import `in`.hridayan.xliffeditor.presentation.components.LocaleBadge
@@ -67,7 +66,9 @@ private val CardContentPadding: Dp = 18.dp
 private val ItemSpacing: Dp = 12.dp
 private val EmptyStateIconSize: Dp = 64.dp
 private val EmptyStateSpacing: Dp = 16.dp
-private val ProgressBarHeight: Dp = 8.dp
+private val BadgeHorizontalSpacing: Dp = 8.dp
+private val BadgeVerticalSpacing: Dp = 6.dp
+private const val ButtonCornerPercent = 100
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -310,13 +311,9 @@ private fun ProjectCard(
     modifier: Modifier = Modifier
 ) {
     val totalCount = project.items.size
-    val translatedCount = project.items.count { it.status == TranslationStatus.TRANSLATED }
-    val progressFraction = if (totalCount > 0) {
-        translatedCount.toFloat() / totalCount.toFloat()
-    } else {
-        0f
+    val translatableCount = remember(project.items) {
+        project.items.count { it.isTranslatable }
     }
-    val progressPercent = (progressFraction * 100).toInt()
 
     CustomCard(
         modifier = modifier.fillMaxWidth(),
@@ -356,41 +353,21 @@ private fun ProjectCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(BadgeHorizontalSpacing),
+                verticalArrangement = Arrangement.spacedBy(BadgeVerticalSpacing),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = "Source: ",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                LocaleBadge(
+                    locale = "${stringResource(R.string.source_language)}: ${project.sourceLocale}",
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
-                LocaleBadge(locale = project.sourceLocale)
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            LinearProgressIndicator(
-                progress = { progressFraction },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(ProgressBarHeight),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.surfaceContainerLowest
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "$translatedCount of $totalCount strings translated ($progressPercent%)",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                LocaleBadge(
+                    locale = stringResource(R.string.strings_count_format, totalCount)
+                )
+                LocaleBadge(
+                    locale = stringResource(R.string.translatable_count_format, translatableCount)
                 )
             }
 
@@ -403,7 +380,7 @@ private fun ProjectCard(
             ) {
                 OutlinedButton(
                     onClick = withHaptic { onExportClick() },
-                    shape = RoundedCornerShape(100),
+                    shape = RoundedCornerShape(ButtonCornerPercent),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
                 ) {
                     Icon(
