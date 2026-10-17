@@ -18,8 +18,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,9 +38,6 @@ import `in`.hridayan.xliffeditor.domain.model.TranslationStatus
 import `in`.hridayan.xliffeditor.domain.model.ValidationSeverity
 import `in`.hridayan.xliffeditor.domain.usecase.ValidateTranslationUseCase
 import `in`.hridayan.xliffeditor.presentation.components.LocaleBadge
-
-import androidx.compose.material3.SheetValue
-import androidx.compose.material3.rememberBottomSheetState
 
 @Composable
 fun EditTranslationBottomSheet(
